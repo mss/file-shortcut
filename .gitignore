@@ -12,3 +12,4 @@ pod2htm*.tmp
 File-Shortcut-*
 *~
 *.swp
+*.kate-swp
