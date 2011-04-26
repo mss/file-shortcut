@@ -264,7 +264,8 @@ sub _readshortcut {
   )) {
     if ($header->{flags}->{$key}) {
       my $len = _read_and_unpack($file, "$key/size", _ => "S") or return;
-      $len = $len->{_};
+      # TODO: WTF? UTF-16?
+      $len = $len->{_} * 2;
       next unless $len;
       my $str = _read_and_unpack($file, "$key/data", _ => "a$len") or return;
       $struct{$key} = $str->{_};
