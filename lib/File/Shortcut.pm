@@ -198,10 +198,10 @@ sub _readshortcut {
   };
   
   $header->{show} = eval { given ($header->{show}) {
-    when ( 1) { return "normal" };
-    when ( 2) { return "minimized" };
-    when ( 3) { return "maximized" };
-    default   { return $header->{show} };
+    when (1) { return "normal" };
+    when (2) { return "minimized" };
+    when (3) { return "maximized" };
+    default  { return $header->{show} };
   }};
 
   my %struct = (
