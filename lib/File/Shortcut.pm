@@ -103,9 +103,15 @@ sub _read_and_unpack {
 }
 
 
-sub _bit_is_set {
-  my($value, $bit) = @_;
-  return $value & (1 << $bit) ? 1 : 0;
+sub _map_bits {
+  my $value = shift;
+  my %result;
+  for (my $i = 0; $i < @_; $i++) {
+    my $key = $_[$i];
+    next unless $key;
+    $result{$key} = $value & (1 << $i) ? 1 : 0;
+  }
+  return %result;
 }
 
 
@@ -162,31 +168,33 @@ sub _readshortcut {
     $header->{guid},
     "01140200000000c00000000046");
 
-  $header->{flags} = {
-    _raw        => $header->{flags},
-    idlist      => _bit_is_set($header->{flags},  0),
-    fod         => _bit_is_set($header->{flags},  1),
-    description => _bit_is_set($header->{flags},  2),
-    relative    => _bit_is_set($header->{flags},  3),
-    workdir     => _bit_is_set($header->{flags},  4),
-    args        => _bit_is_set($header->{flags},  5),
-    icon        => _bit_is_set($header->{flags},  6),
+  $header->{flags} = { _raw => $header->{flags},
+    _map_bits($header->{flags}, qw(
+      idlist
+      fod
+      description
+      relative
+      workdir
+      args
+      icon
+    ))
   };
-  $header->{attribs} = {
-    _raw       => $header->{attribs},
-    readonly   => _bit_is_set($header->{attribs},  0),
-    hidden     => _bit_is_set($header->{attribs},  1),
-    system     => _bit_is_set($header->{attribs},  2),
-    volume     => _bit_is_set($header->{attribs},  3),
-    dir        => _bit_is_set($header->{attribs},  4),
-    archive    => _bit_is_set($header->{attribs},  5),
-    encrypted  => _bit_is_set($header->{attribs},  6),
-    normal     => _bit_is_set($header->{attribs},  7),
-    temp       => _bit_is_set($header->{attribs},  8),
-    sparse     => _bit_is_set($header->{attribs},  9),
-    reparse    => _bit_is_set($header->{attribs}, 10),
-    compressed => _bit_is_set($header->{attribs}, 11),
-    offline    => _bit_is_set($header->{attribs}, 12),
+  $header->{attribs} = { _raw => $header->{attribs},
+    _map_bits($header->{attribs}, qw(
+      readonly
+      hidden
+      system
+      volume
+      dir
+      archive
+      encrypted
+      normal
+      temp
+      sparse
+      reparse
+      compressed
+      offline
+    ))
   };
   
   $header->{show} = eval { given ($header->{show}) {
