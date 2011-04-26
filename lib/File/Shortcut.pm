@@ -36,19 +36,24 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+
+=head2 read_shortcut
 
 =cut
 
-sub function1 {
+sub read_shortcut {
+  
 }
 
-=head2 function2
+
+=head2 write_shortcut
 
 =cut
 
-sub function2 {
+sub write_shortcut {
+  
 }
+
 
 =head1 AUTHOR
 
