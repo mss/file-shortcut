@@ -250,7 +250,8 @@ sub _readshortcut {
       $struct{$key} = $str->{_};
     }
   }
-
+  # TODO: delete $header->{flags};
+  
   return \%struct;
 }
 
