@@ -30,12 +30,14 @@ our $VERSION = '0.01';
 =head1 SYNOPSIS
 
     use File::Shortcut qw(shortcut readshortcut);
+    use File::Spec::Win32;
 
     shortcut "C:\\WINDOWS\\notepad.exe", "notepad.exe.lnk", {
       description => "The worst editor on earth",
     } or die $File::Shortcut::errstr;
 
     my $path = readshortcut("notepad.exe.lnk") or die $File::Shortcut::errstr;
+    my($vol, $dir, $file) = File::Spec::Win32->splitpath($path);
 
 
 =head1 EXPORT
