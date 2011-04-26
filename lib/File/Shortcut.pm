@@ -142,7 +142,7 @@ sub _readshortcut {
     mtime    => "Q",   #  1 qword Modification time
     fsize    => "L",   #  1 dword File length
     icon     => "L",   #  1 dword Icon number
-    window   => "L",   #  1 dword Show Window
+    show     => "L",   #  1 dword Show Window
     hotkey   => "L",   #  1 dword Hot Key
     reserved => "L",   #  1 dword Reserved
     reserved => "L",   #  1 dword Reserved
@@ -183,19 +183,11 @@ sub _readshortcut {
     offline    => $header->{attribs} & (1 << 12),
   };
   
-  $header->{window} = eval { given ($header->{window}) {
-    when ( 0) { return "hide" };
+  $header->{show} = eval { given ($header->{show}) {
     when ( 1) { return "normal" };
     when ( 2) { return "minimized" };
     when ( 3) { return "maximized" };
-    when ( 4) { return "noactivate" };
-    when ( 5) { return "show" };
-    when ( 6) { return "minimize" };
-    when ( 7) { return "minimizenoactive" };
-    when ( 8) { return "na" };
-    when ( 9) { return "restore" };
-    when (10) { return "default" };
-    default   { return undef };
+    default   { return $header->{show} };
   }};
 
   my %struct = (
