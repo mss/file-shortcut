@@ -64,7 +64,7 @@ sub _err {
 =head2 readshortcut
 
 Returns the value of a shortcut.  If there is some system error, returns 
-the undefined value and sets C<$File::Shortcut::errno> (and probably also
+the undefined value and sets C<$File::Shortcut::errstr> (and probably also
 C<$!> (errno)).  EXPR can be either a string representing a file path
 or a file handle.  B<In the latter case, binmode is set on that file
 handle.>  If EXPR is omitted, uses C<$_>.
