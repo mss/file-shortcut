@@ -11,6 +11,9 @@ our @EXPORT_OK = qw(
   readshortcut
 );
 
+use Carp;
+
+
 =head1 NAME
 
 File::Shortcut - Read and write Windows shortcut files (C<*.lnk>).
@@ -62,7 +65,9 @@ sub _err {
 
 Returns the value of a shortcut.  If there is some system error, returns 
 the undefined value and sets C<$File::Shortcut::errno> (and probably also
-C<$!> (errno)).  If EXPR is omitted, uses C<$_>.
+C<$!> (errno)).  EXPR can be either a string representing a file path
+or a file handle.  B<In the latter case, binmode is set on that file
+handle.>  If EXPR is omitted, uses C<$_>.
 
 =cut
 
@@ -74,6 +79,13 @@ sub readshortcut {
 sub _readshortcut {
   my($errstr, $file) = @_;
 
+  if (ref $file) {
+    croak "parameter must be a file handle (or path)" if tell $file == -1;
+  }
+  else {
+    open my $fh, '<', $file or return _err($errstr, "open(%s): %s", $file, $!);
+    $file = $fh;
+  }
   binmode($file) or return _err($errstr, "binmode(): %s", $!);
 
   my($buf, $len);
