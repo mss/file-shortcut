@@ -334,11 +334,11 @@ This module is heavily based on the information found at the following links:
 
 =over 4
 
-=item * Jesse Hager: "The Windows Shortcut File Format"
+=item * [HAGER1998] Jesse Hager: "The Windows Shortcut File Format"
 
 L<http://8bits.googlecode.com/files/The_Windows_Shortcut_File_Format.pdf>
 
-=item * Daniel at Stdlib.com: "Shortcut File Format (.lnk)"
+=item * [STDLIB2007] Daniel at Stdlib.com: "Shortcut File Format (.lnk)"
 
 L<http://www.stdlib.com/art6-Shortcut-File-Format-lnk.html>
 
