@@ -174,10 +174,10 @@ sub _readshortcut {
   ) or return;
   delete $header->{reserved};
 
-  _expect($errstr, "header: magic", "%08x",
+  _expect($errstr, "header/magic", "%08x",
     $header->{magic},
     ord("L"));
-  _expect($errstr, "header: guid", "%s",
+  _expect($errstr, "header/guid", "%s",
     $header->{guid},
     "01140200000000c00000000046");
 
@@ -263,10 +263,10 @@ sub _readshortcut {
     icon
   )) {
     if ($header->{flags}->{$key}) {
-      my $len = _read_and_unpack($file, $key, _ => "S") or return;
+      my $len = _read_and_unpack($file, "$key/size", _ => "S") or return;
       $len = $len->{_};
       next unless $len;
-      my $str = _read_and_unpack($file, $key, _ => "a$len") or return;
+      my $str = _read_and_unpack($file, "$key/data", _ => "a$len") or return;
       $struct{$key} = $str->{_};
     }
   }
