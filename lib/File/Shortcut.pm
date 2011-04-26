@@ -68,6 +68,14 @@ sub _expect {
   );
 }
 
+our $debug = 0;
+
+sub _dbg {
+  return unless $debug;
+  my $fh = ref $debug ? $debug : \*STDERR;
+  printf $fh shift() . "\n", @_;
+}
+
 
 sub _sizeof {
   my $type = shift;
@@ -88,6 +96,7 @@ sub _read_and_unpack {
   }
   $template .= ")<";
   
+  _dbg("%s: read %s %d: %s", $fh, $where, $len, $template);
   my $buf;
   if (read($fh, $buf, $len) != $len) {
     return _err($errstr, "read(): %s: expected %d bytes (%s)",
@@ -96,9 +105,11 @@ sub _read_and_unpack {
       $template,
     );
   }
+  _dbg("%s: -> %s", $fh, unpack("h" . $len * 2, $buf)) if $debug;
   
   my %buf;
   @buf{@keys} = unpack($template, $buf);
+  _dbg("%s: -> { %s }", $fh, join ", " => map { "$_ => $buf{$_}" } @keys) if $debug;
   return \%buf;
 }
 

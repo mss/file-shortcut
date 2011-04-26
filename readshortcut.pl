@@ -13,6 +13,8 @@ use File::Shortcut qw(readshortcut);
 
 use Data::Dumper;
 
+$File::Shortcut::debug = 1;
+
 my $data = readshortcut(@ARGV);
 unless ($data) {
   say $File::Shortcut::errstr;
