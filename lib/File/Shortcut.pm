@@ -13,7 +13,7 @@ our @EXPORT_OK = qw(
 
 =head1 NAME
 
-File::Shortcut - The great new File::Shortcut!
+File::Shortcut - Read and write Windows shortcut files (C<*.lnk>).
 
 =head1 VERSION
 
@@ -26,19 +26,22 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+    use File::Shortcut qw(shortcut readshortcut);
 
-Perhaps a little code snippet.
+    shortcut "C:\\WINDOWS\\notepad.exe", "notepad.exe.lnk", {
+      description => "The worst editor on earth",
+    } or die $File::Shortcut::errstr;
 
-    use File::Shortcut;
+    my $path = readshortcut("notepad.exe.lnk") or die $File::Shortcut::errstr;
 
-    my $foo = File::Shortcut->new();
-    ...
 
 =head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+The following functions can be imported into your script:
+
+    shortcut
+    readshortcut
+
 
 =head1 SUBROUTINES/METHODS
 
@@ -263,11 +266,10 @@ Malte S. Stretz, C<< <mss at apache.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-file-shortcut at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=File-Shortcut>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
+Please report any bugs or feature requests to C<bug-file-shortcut at rt.cpan.org>,
+or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=File-Shortcut>.
+I will be notified, and then you'll automatically be notified of progress on 
+your bug as I make changes.
 
 
 =head1 SUPPORT
@@ -301,6 +303,20 @@ L<http://search.cpan.org/dist/File-Shortcut/>
 
 
 =head1 ACKNOWLEDGEMENTS
+
+This module is heavily based on the information found at the following links:
+
+=over 4
+
+=item * Jesse Hager: "The Windows Shortcut File Format"
+
+L<http://8bits.googlecode.com/files/The_Windows_Shortcut_File_Format.pdf>
+
+=item * Daniel at Stdlib.com: "Shortcut File Format (.lnk)"
+
+L<http://www.stdlib.com/art6-Shortcut-File-Format-lnk.html>
+
+=back
 
 
 =head1 LICENSE AND COPYRIGHT
