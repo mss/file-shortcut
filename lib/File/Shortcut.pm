@@ -44,7 +44,7 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =cut
 
-my $errstr = "";
+our $errstr = "";
 
 sub _err {
   my($errstr) = shift;
