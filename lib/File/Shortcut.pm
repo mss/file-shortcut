@@ -181,7 +181,7 @@ sub _readshortcut {
 
   $header->{flags} = { _raw => $header->{flags},
     _map_bits($header->{flags}, qw(
-      idlist
+      itemidlist
       fod
       description
       relative
@@ -219,24 +219,24 @@ sub _readshortcut {
     header => $header,
   );
   
-  if ($header->{flags}->{idlist}) {
-    my $len = _read_and_unpack($file, "idlist", _ => "S") or return;
+  if ($header->{flags}->{itemidlist}) {
+    my $len = _read_and_unpack($file, "itemidlist/size", _ => "S") or return;
     $len = $len->{_};
 
     while (1) {
-      $len = _read_and_unpack($file, "idlist", _ => "L") or return;
+      $len = _read_and_unpack($file, "itemidlist/itemsize", _ => "S") or return;
       $len = $len->{_};
       last if ($len == 0);
-      $len -= _sizeof("L");
+      $len -= _sizeof("S");
       
-      my $data = _read_and_unpack($file, "idlist",
+      my $data = _read_and_unpack($file, "itemidlist/itemdata",
         len      => "L",
-        offset   => "L", 
+        pnext    => "L", 
         remote   => "L",
-        volinfo  => "L",
-        basepath => "L",
-        netvol   => "L",
-        path     => "L",
+        pvol     => "L",
+        pbase    => "L",
+        pnet     => "L",
+        ppath    => "L",
       ) or return;
       if ($data->{remote} > 1) {
         # error
