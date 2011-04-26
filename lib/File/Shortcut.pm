@@ -48,7 +48,7 @@ our $errstr = "";
 
 sub _err {
   my($errstr) = shift;
-  $$errstr = sprintf(@_);
+  $$errstr = sprintf(shift, @_);
   return undef;
 }
 
@@ -64,12 +64,12 @@ sub read_shortcut {
 sub _read_shortcut {
   my($errstr, $file) = @_;
 
-  binmode($file) or return _err("binmode(): %s", $!);
+  binmode($file) or return _err($errstr, "binmode(): %s", $!);
 
   my($buf, $len);
 
   $len = 4 + 16 + 4 + 4 + 8 * 3 + 4 * 4 + 4 * 2;
-  read($file, $buf, $len) == $len or return _err("read(): header: expected %d bytes", $len);
+  read($file, $buf, $len) == $len or return _err($errstr, "read(): header: expected %d bytes", $len);
 
   # http://8bits.googlecode.com/files/The_Windows_Shortcut_File_Format.pdf
   # http://www.stdlib.com/art6-Shortcut-File-Format-lnk.html
@@ -105,10 +105,10 @@ sub _read_shortcut {
   ), $buf);
 
   unless ($header{magic} == ord("L")) {
-    return _err("Wrong magic %08x", $header{magic});
+    return _err($errstr, "Wrong magic %08x", $header{magic});
   }
   unless ($header{guid} == "\x01\x14\x02\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x46") {
-    return _err("Wrong GUID %32x", $header{guid});
+    return _err($errstr, "Wrong GUID %32x", $header{guid});
   }
 
   delete $header{reserved};
@@ -161,12 +161,12 @@ sub _read_shortcut {
   
   if ($header{flags}->{idlist}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): idlist: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): idlist: expected %d bytes", $len);
     $len = unpack("v", $buf);
     
     while (1) {
       $len = 2;
-      read($file, $buf, $len) == $len or _err("read(): idlist: expected %d bytes", $len);
+      read($file, $buf, $len) == $len or _err($errstr, "read(): idlist: expected %d bytes", $len);
       $len = unpack("v", $buf);
       break if ($len == 0);
       $len -= 2;
@@ -191,41 +191,41 @@ sub _read_shortcut {
 
   if ($header{flags}->{description}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): description: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): description: expected %d bytes", $len);
     $len = unpack("v", $buf);
-    read($file, $buf, $len) == $len or _err("read(): description: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): description: expected %d bytes", $len);
     $struct{description} = unpack("A$len", $buf);
   }
   
   if ($header{flags}->{relative}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): relative: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): relative: expected %d bytes", $len);
     $len = unpack("v", $buf);
-    read($file, $buf, $len) == $len or _err("read(): relative: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): relative: expected %d bytes", $len);
     $struct{relative} = unpack("A$len", $buf);
   }
   
   if ($header{flags}->{workdir}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): workdir: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): workdir: expected %d bytes", $len);
     $len = unpack("v", $buf);
-    read($file, $buf, $len) == $len or _err("read(): workdir: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): workdir: expected %d bytes", $len);
     $struct{workdir} = unpack("A$len", $buf);
   }
   
   if ($header{flags}->{args}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): args: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): args: expected %d bytes", $len);
     $len = unpack("v", $buf);
-    read($file, $buf, $len) == $len or _err("read(): args: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): args: expected %d bytes", $len);
     $struct{args} = unpack("A$len", $buf);
   }
   
   if ($header{flags}->{icon}) {
     $len = 2;
-    read($file, $buf, $len) == $len or _err("read(): icon: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): icon: expected %d bytes", $len);
     $len = unpack("v", $buf);
-    read($file, $buf, $len) == $len or _err("read(): icon: expected %d bytes", $len);
+    read($file, $buf, $len) == $len or _err($errstr, "read(): icon: expected %d bytes", $len);
     $struct{icon} = unpack("A$len", $buf);
   }
 
