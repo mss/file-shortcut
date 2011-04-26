@@ -60,7 +60,7 @@ sub _read_shortcut {
 
   binmode($file) or return _err("binmode(): %s", $!);
 
-  my $buf, $len;
+  my($buf, $len);
 
   $len = 4 + 16 + 4 + 4 + 8 * 3 + 4 * 4 + 4 * 2;
   read($file, $buf, $len) == $len or return _err("read(): header: expected %d bytes", $len);
@@ -151,20 +151,6 @@ sub _read_shortcut {
 
   my %struct = (
     header => \%header,
-    my %data;
-    @data(qw(
-      len
-      offset
-      remote
-      volinfo
-      basepath
-      netvol
-      path
-    )) = unpack("VVVVVVV", $bug);
-    if ($data{remote} > 1) {
-      # error
-    }
-    
   );
   
   if ($header{flags}->{idlist}) {
@@ -172,12 +158,26 @@ sub _read_shortcut {
     read($file, $buf, $len) == $len or _err("read(): idlist: expected %d bytes", $len);
     $len = unpack("v", $buf);
     
-    while (true) {
+    while (1) {
       $len = 2;
       read($file, $buf, $len) == $len or _err("read(): idlist: expected %d bytes", $len);
       $len = unpack("v", $buf);
       break if ($len == 0);
       $len -= 2;
+      
+      my %data;
+      @data{qw(
+        len
+        offset
+        remote
+        volinfo
+        basepath
+        netvol
+        path
+      )} = unpack("VVVVVVV", $buf);
+      if ($data{remote} > 1) {
+        # error
+      }
       
       # TODO
     }
@@ -223,7 +223,7 @@ sub _read_shortcut {
     $struct{icon} = unpack("A$len", $buf);
   }
 
-  return $struct;
+  return \%struct;
 }
 
 
