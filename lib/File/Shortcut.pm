@@ -7,8 +7,8 @@ use strict;
 
 use parent qw(Exporter);
 our @EXPORT_OK = qw(
-  read_shortcut
-  write_shortcut
+  shortcut
+  readshortcut
 );
 
 =head1 NAME
@@ -52,16 +52,23 @@ sub _err {
   return undef;
 }
 
-=head2 read_shortcut
+
+=head2 readshortcut EXPR
+
+=head2 readshortcut
+
+Returns the value of a shortcut.  If there is some system error, returns 
+the undefined value and sets C<$File::Shortcut::errno> (and probably also
+C<$!> (errno)).  If EXPR is omitted, uses C<$_>.
 
 =cut
 
-
-sub read_shortcut {
-  return _read_shortcut(\$errstr, @_);
+sub readshortcut {
+  my $file = @_ ? $_[0] : $_;
+  return _readshortcut(\$errstr, $file);
 }
 
-sub _read_shortcut {
+sub _readshortcut {
   my($errstr, $file) = @_;
 
   binmode($file) or return _err($errstr, "binmode(): %s", $!);
@@ -233,11 +240,19 @@ sub _read_shortcut {
 }
 
 
-=head2 write_shortcut
+=head2 shortcut OLDFILE, NEWFILE, METADATA
+
+=head2 shortcut OLDFILE, NEWFILE
+
+Creates a new filename linked to the old filename.  Returns true for
+success, false otherwise.
+
+Optionally, a METADATA hash can be used to set further values of the 
+shortcut file.  TODO: format
 
 =cut
 
-sub write_shortcut {
+sub shortcut {
   
 }
 
