@@ -111,7 +111,7 @@ sub _read_and_unpack {
   
   my %buf;
   @buf{@keys} = unpack($template, $buf);
-  _dbg("%s: -> { %s }", $fh, join ", " => map { "$_ => $buf{$_}" } @keys) if $debug;
+  _dbg("%s: -> { %s }", $fh, join ", " => map { sprintf("%s => %s", $_ , $buf{$_} // "undef") } @keys) if $debug;
   return \%buf;
 }
 
@@ -224,28 +224,10 @@ sub _readshortcut {
   if ($header->{flags}->{itemidlist}) {
     my $len = _read_and_unpack($file, "itemidlist/size", _ => "S") or return;
     $len = $len->{_};
-
-    while (1) {
-      $len = _read_and_unpack($file, "itemidlist/itemsize", _ => "S") or return;
-      $len = $len->{_};
-      last if ($len == 0);
-      $len -= _sizeof("S");
-      
-      my $data = _read_and_unpack($file, "itemidlist/itemdata",
-        len      => "L",
-        pnext    => "L", 
-        remote   => "L",
-        pvol     => "L",
-        pbase    => "L",
-        pnet     => "L",
-        ppath    => "L",
-      ) or return;
-      if ($data->{remote} > 1) {
-        # error
-      }
-      
-      # TODO
-    }
+    
+    # Skip itemidlist, we don't know how to parse it.
+    # TODO: Find out...
+    _read_and_unpack($file, "itemidlist/skip", _ => "x$len") or return;
   }
 
   foreach my $key (qw(
