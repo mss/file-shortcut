@@ -148,7 +148,7 @@ sub _readshortcut {
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
     guid     => "h32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
-    attribs  => "L",   #  1 dword Target file flags
+    attrs    => "L",   #  1 dword Target file flags
     ctime    => "Q",   #  1 qword Creation time
     atime    => "Q",   #  1 qword Last access time
     mtime    => "Q",   #  1 qword Modification time
@@ -179,8 +179,8 @@ sub _readshortcut {
       icon
     ))
   };
-  $header->{attribs} = { _raw => $header->{attribs},
-    _map_bits($header->{attribs}, qw(
+  $header->{attrs} = { _raw => $header->{attrs},
+    _map_bits($header->{attrs}, qw(
       readonly
       hidden
       system
