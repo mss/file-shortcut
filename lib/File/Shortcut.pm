@@ -229,6 +229,31 @@ sub _readshortcut {
     # TODO: Find out...
     _read_and_unpack($file, "itemidlist/skip", _ => "x$len") or return;
   }
+  
+  my $len = _read_and_unpack($file, "locinfo/size", _ => "L") or return;
+  $len = $len->{_};
+  unless ($header->{flags}->{fod}) {
+    _read_and_unpack($file, "locinfo/skip", _ => "x$len") or return;
+  }
+  else {
+    my $data = _read_and_unpack($file, "locinfo/head",
+      pnext    => "L",
+      flags    => "L",
+      pvol     => "L",
+      pbase    => "L",
+      pnet     => "L",
+      ppath    => "L",
+    ) or return;
+    $data->{flags} = { _raw => $data->{flags},
+      _map_bits($data->{flags}, qw(
+        local
+        remote
+      ))
+    };
+    
+    # TODO: Don't skip
+    _read_and_unpack($file, "locinfo/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
+  }
 
   foreach my $key (qw(
     description
