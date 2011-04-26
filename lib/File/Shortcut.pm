@@ -103,6 +103,12 @@ sub _read_and_unpack {
 }
 
 
+sub _bit_is_set {
+  my($value, $bit) = @_;
+  return $value & (1 << $bit) ? 1 : 0;
+}
+
+
 =head2 readshortcut EXPR
 
 =head2 readshortcut
@@ -158,29 +164,29 @@ sub _readshortcut {
 
   $header->{flags} = {
     _raw        => $header->{flags},
-    idlist      => $header->{flags} & (1 <<  0),
-    fod         => $header->{flags} & (1 <<  1),
-    description => $header->{flags} & (1 <<  2),
-    relative    => $header->{flags} & (1 <<  3),
-    workdir     => $header->{flags} & (1 <<  4),
-    args        => $header->{flags} & (1 <<  5),
-    icon        => $header->{flags} & (1 <<  6),
+    idlist      => _bit_is_set($header->{flags},  0),
+    fod         => _bit_is_set($header->{flags},  1),
+    description => _bit_is_set($header->{flags},  2),
+    relative    => _bit_is_set($header->{flags},  3),
+    workdir     => _bit_is_set($header->{flags},  4),
+    args        => _bit_is_set($header->{flags},  5),
+    icon        => _bit_is_set($header->{flags},  6),
   };
   $header->{attribs} = {
     _raw       => $header->{attribs},
-    readonly   => $header->{attribs} & (1 <<  0),
-    hidden     => $header->{attribs} & (1 <<  1),
-    system     => $header->{attribs} & (1 <<  2),
-    volume     => $header->{attribs} & (1 <<  3),
-    dir        => $header->{attribs} & (1 <<  4),
-    archive    => $header->{attribs} & (1 <<  5),
-    encrypted  => $header->{attribs} & (1 <<  6),
-    normal     => $header->{attribs} & (1 <<  7),
-    temp       => $header->{attribs} & (1 <<  8),
-    sparse     => $header->{attribs} & (1 <<  9),
-    reparse    => $header->{attribs} & (1 << 10),
-    compressed => $header->{attribs} & (1 << 11),
-    offline    => $header->{attribs} & (1 << 12),
+    readonly   => _bit_is_set($header->{attribs},  0),
+    hidden     => _bit_is_set($header->{attribs},  1),
+    system     => _bit_is_set($header->{attribs},  2),
+    volume     => _bit_is_set($header->{attribs},  3),
+    dir        => _bit_is_set($header->{attribs},  4),
+    archive    => _bit_is_set($header->{attribs},  5),
+    encrypted  => _bit_is_set($header->{attribs},  6),
+    normal     => _bit_is_set($header->{attribs},  7),
+    temp       => _bit_is_set($header->{attribs},  8),
+    sparse     => _bit_is_set($header->{attribs},  9),
+    reparse    => _bit_is_set($header->{attribs}, 10),
+    compressed => _bit_is_set($header->{attribs}, 11),
+    offline    => _bit_is_set($header->{attribs}, 12),
   };
   
   $header->{show} = eval { given ($header->{show}) {
