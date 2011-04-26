@@ -149,8 +149,12 @@ sub _readshortcut {
   ) or return;
   delete $header->{reserved};
 
-  _expect($errstr, "header: magic", "%08x", $header->{magic}, ord("L"));
-  _expect($errstr, "header: guid", "%s", $header->{guid}, "01140200000000c00000000046");
+  _expect($errstr, "header: magic", "%08x",
+    $header->{magic},
+    ord("L"));
+  _expect($errstr, "header: guid", "%s",
+    $header->{guid},
+    "01140200000000c00000000046");
 
   $header->{flags} = {
     _raw        => $header->{flags},
