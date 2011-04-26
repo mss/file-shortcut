@@ -128,6 +128,13 @@ sub _map_bits {
 }
 
 
+sub _parse_filetime {
+  # Windows epoch: 1601-01-01.  Precision: 100ns
+  # http://msdn.microsoft.com/en-us/library/ms724284.aspx
+  my $value = shift;
+  return ($value / 10 / 1000 / 1000) - 11644473600;
+}
+
 =head2 readshortcut EXPR
 
 =head2 readshortcut
@@ -157,6 +164,7 @@ sub _readshortcut {
   }
   binmode($file) or return _err($errstr, "binmode(): %s", $!);
 
+  # TODO: Q might crash
   my $header = _read_and_unpack($file, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
     guid     => "h32", # 16 bytes GUID for shortcut files
@@ -209,6 +217,10 @@ sub _readshortcut {
       offline
     ))
   };
+  
+  for my $key (qw(ctime atime mtime)) {
+    $header->{$key} = _parse_filetime($header->{$key});
+  }
   
   $header->{show} = eval { given ($header->{show}) {
     when (1) { return "normal" };
