@@ -5,6 +5,12 @@ use 5.10.0;
 use warnings;
 use strict;
 
+use parent qw(Exporter);
+our @EXPORT_OK = qw(
+  read_shortcut
+  write_shortcut
+);
+
 =head1 NAME
 
 File::Shortcut - The great new File::Shortcut!
