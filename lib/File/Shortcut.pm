@@ -253,6 +253,7 @@ sub _readshortcut {
     prefer_environment_path
     keep_local_id_list_for_unc_target
   ));
+  delete $header->{flags}->{_};
   
   if ($header->{flags}->{has_link_target}) {
     my $len = _read_and_unpack($file, "link_target/size", _ => "S") or return;
@@ -288,6 +289,7 @@ sub _readshortcut {
     _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
   }
 
+  # [MS-SHLLINK] 2.4
   foreach my $key (qw(
     name
     relative_path
@@ -324,6 +326,7 @@ sub _readshortcut {
     not_content_indexed
     encrypted
   ));
+  delete $header->{attrs}->{_};
   
   # Parse 64-bit FileTime.
   for my $key (qw(ctime atime mtime)) {
