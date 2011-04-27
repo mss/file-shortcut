@@ -101,20 +101,25 @@ sub _read_and_unpack {
   }
   $template .= ")<";
   
-  _dbg("%s: read %s %d: %s", $fh, $where, $len, $template);
+  _dbg("%s: read %d: %s", $where, $len, $template);
   my $buf;
-  if (read($fh, $buf, $len) != $len) {
-    return _err($errstr, "read(): %s: expected %d bytes (%s)",
-      $where,
-      $len,
-      $template,
-    );
+  if (ref $fh) {
+    if (read($fh, $buf, $len) != $len) {
+      return _err($errstr, "read(): %s: expected %d bytes (%s)",
+        $where,
+        $len,
+        $template,
+      );
+    }
   }
-  _dbg("%s: -> %s", $fh, unpack("h" . $len * 2, $buf)) if $debug;
+  else {
+    $buf = $fh;
+  }
+  _dbg(" -> %s", unpack("h" . $len * 2, $buf)) if $debug;
   
   my %buf;
   @buf{@keys} = unpack($template, $buf);
-  _dbg("%s: -> { %s }", $fh, join ", " => map { sprintf("%s => %s", $_ , $buf{$_} // "undef") } @keys) if $debug;
+  _dbg(" -> { %s }", join ", " => map { sprintf("%s => %s", $_ , $buf{$_} // "undef") } @keys) if $debug;
   return \%buf;
 }
 
