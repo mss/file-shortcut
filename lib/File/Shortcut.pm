@@ -220,37 +220,6 @@ sub _readshortcut {
     join("", qw(01140200 0000 0000 c000 000000000046))
   ) or return;
 
-  # [MS-SHLLINK] 2.1.2
-  $header->{attrs} = _map_bits($header->{attrs}, qw(
-    readonly
-    hidden
-    system
-    _
-    directory
-    archive
-    _
-    normal
-    temporary
-    sparse_file
-    reparse_point
-    compressed
-    offline
-    not_content_indexed
-    encrypted
-  ));
-  
-  for my $key (qw(ctime atime mtime)) {
-    $header->{$key} = _parse_filetime($header->{$key});
-  }
-  
-  # [MS-SHLLINK] 2.1
-  $header->{show} = eval { given ($header->{show}) {
-    when (1) { return "normal" };
-    when (3) { return "maximized" };
-    when (7) { return "minimized" };
-    default  { return "normal" };
-  }};
-
   my %struct = (
     header => $header,
   );
@@ -336,6 +305,38 @@ sub _readshortcut {
     }
   }
   # TODO: delete $header->{flags};
+  
+  # [MS-SHLLINK] 2.1.2
+  $header->{attrs} = _map_bits($header->{attrs}, qw(
+    readonly
+    hidden
+    system
+    _
+    directory
+    archive
+    _
+    normal
+    temporary
+    sparse_file
+    reparse_point
+    compressed
+    offline
+    not_content_indexed
+    encrypted
+  ));
+  
+  # Parse 64-bit FileTime.
+  for my $key (qw(ctime atime mtime)) {
+    $header->{$key} = _parse_filetime($header->{$key});
+  }
+  
+  # [MS-SHLLINK] 2.1
+  $header->{show} = eval { given ($header->{show}) {
+    when (1) { return "normal" };
+    when (3) { return "maximized" };
+    when (7) { return "minimized" };
+    default  { return "normal" };
+  }};
   
   return \%struct;
 }
