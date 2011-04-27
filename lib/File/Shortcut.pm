@@ -220,20 +220,23 @@ sub _readshortcut {
     join("", qw(01140200 0000 0000 c000 000000000046))
   ) or return;
 
+  # [MS-SHLLINK] 2.1.2
   $header->{attrs} = _map_bits($header->{attrs}, qw(
     readonly
     hidden
     system
-    volume
-    dir
+    _
+    directory
     archive
-    encrypted
+    _
     normal
-    temp
-    sparse
-    reparse
+    temporary
+    sparse_file
+    reparse_point
     compressed
     offline
+    not_content_indexed
+    encrypted
   ));
   
   for my $key (qw(ctime atime mtime)) {
@@ -251,6 +254,7 @@ sub _readshortcut {
     header => $header,
   );
   
+  # [MS-SHLLINK] 2.1.1
   $header->{flags} = _map_bits($header->{flags}, qw(
     has_link_target
     has_link_info
@@ -259,6 +263,25 @@ sub _readshortcut {
     has_working_dir
     has_arguments
     has_icon_location
+    is_unicode
+    force_no_link_info
+    has_exp_string
+    run_in_separate_process
+    _
+    has_darwin_id
+    run_as_user
+    has_exp_icon
+    no_pidl_alias
+    _
+    run_with_shim_layer
+    force_no_link_track
+    enable_target_metadata
+    disable_link_path_tracking
+    disable_known_folder_alias
+    allow_link_to_link
+    unalias_on_save
+    prefer_environment_path
+    keep_local_id_list_for_unc_target
   ));
   
   if ($header->{flags}->{has_link_target}) {
