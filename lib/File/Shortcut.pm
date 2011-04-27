@@ -294,12 +294,10 @@ sub _readshortcut {
       pnet     => "L",
       ppath    => "L",
     ) or return;
-    $data->{flags} = { _raw => $data->{flags},
-      _map_bits($data->{flags}, qw(
-        local
-        remote
-      ))
-    };
+    $data->{flags} = _map_bits($data->{flags}, qw(
+      local
+      remote
+    ));
     
     # TODO: Don't skip
     _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
