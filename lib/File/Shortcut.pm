@@ -119,13 +119,19 @@ sub _read_and_unpack {
 
 sub _map_bits {
   my $value = shift;
-  my %result;
-  for (my $i = 0; $i < @_; $i++) {
-    my $key = $_[$i];
+  
+  my %result = (
+    _raw => $value,
+  );
+  
+  while (@_) {
+    my $key = shift;
     next unless $key;
-    $result{$key} = $value & (1 << $i) ? 1 : 0;
+    $result{$key} = $value & 1;
+    $value >>= 1;
   }
-  return %result;
+  
+  return \%result;
 }
 
 
@@ -214,34 +220,21 @@ sub _readshortcut {
     join("", qw(01140200 0000 0000 c000 000000000046))
   ) or return;
 
-  $header->{flags} = { _raw => $header->{flags},
-    _map_bits($header->{flags}, qw(
-      has_link_target
-      has_link_info
-      has_name
-      has_relative_path
-      has_working_dir
-      has_arguments
-      has_icon_location
-    ))
-  };
-  $header->{attrs} = { _raw => $header->{attrs},
-    _map_bits($header->{attrs}, qw(
-      readonly
-      hidden
-      system
-      volume
-      dir
-      archive
-      encrypted
-      normal
-      temp
-      sparse
-      reparse
-      compressed
-      offline
-    ))
-  };
+  $header->{attrs} = _map_bits($header->{attrs}, qw(
+    readonly
+    hidden
+    system
+    volume
+    dir
+    archive
+    encrypted
+    normal
+    temp
+    sparse
+    reparse
+    compressed
+    offline
+  ));
   
   for my $key (qw(ctime atime mtime)) {
     $header->{$key} = _parse_filetime($header->{$key});
@@ -257,6 +250,16 @@ sub _readshortcut {
   my %struct = (
     header => $header,
   );
+  
+  $header->{flags} = _map_bits($header->{flags}, qw(
+    has_link_target
+    has_link_info
+    has_name
+    has_relative_path
+    has_working_dir
+    has_arguments
+    has_icon_location
+  ));
   
   if ($header->{flags}->{has_link_target}) {
     my $len = _read_and_unpack($file, "link_target/size", _ => "S") or return;
