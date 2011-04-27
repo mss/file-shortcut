@@ -13,8 +13,6 @@ our @EXPORT_OK = qw(
 
 use Carp;
 
-use Math::BigInt;
-
 
 =head1 NAME
 
@@ -133,16 +131,24 @@ sub _map_bits {
 sub _parse_filetime {
   # Windows epoch: 1601-01-01.  Precision: 100ns
   # http://msdn.microsoft.com/en-us/library/ms724284.aspx
-  # Code taken from DateTime::Format::WindowsFileTime 0.02
-  my $value = Math::BigInt->new("0x" . shift());
+  # Loosely based on
+  #  * DateTime::Format::WindowsFileTime 0.02
+  #  * http://www.perlmonks.org/?node_id=846055
+  #  * http://stackoverflow.com/questions/1864245/how-can-i-do-64-bit-arithmetic-in-perl
+  use bignum;
   
-  # Centi-nanoseconds to milliseconds.
-  $value /= 10000;
+  my $value = shift;
+  
+  my($lo, $hi) = unpack 'VV' => $value;
+  $value = $hi * 2**32 + $lo;
+  
   # Fix the epoch.
-  $value -= 11644473600000;
-  # Milliseconds to seconds.
-  $value /= 1000;
-  return $value->numify;
+  $value -= 11644473600 * 1e7;
+  # Centi-nanoseconds to seconds.
+  $value /= 1e7;
+
+  no bignum;
+  return $value->bstr() * 1;
 }
 
 =head2 readshortcut EXPR
@@ -174,15 +180,14 @@ sub _readshortcut {
   }
   binmode($file) or return _err($errstr, "binmode(): %s", $!);
 
-  # TODO: Q might crash
   my $header = _read_and_unpack($file, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
     guid     => "h32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
     attrs    => "L",   #  1 dword Target file flags
-    ctime    => "h16", #  1 qword Creation time
-    atime    => "h16", #  1 qword Last access time
-    mtime    => "h16", #  1 qword Modification time
+    ctime    => "a[Q]",#  1 qword Creation time
+    atime    => "a[Q]",#  1 qword Last access time
+    mtime    => "a[Q]",#  1 qword Modification time
     fsize    => "L",   #  1 dword File length
     icon     => "L",   #  1 dword Icon number
     show     => "L",   #  1 dword Show Window
