@@ -192,7 +192,8 @@ sub _readshortcut {
     fsize    => "L",   #  1 dword File length
     icon     => "L",   #  1 dword Icon number
     show     => "L",   #  1 dword Show Window
-    hotkey   => "L",   #  1 dword Hot Key
+    hotkey   => "S",   #  1  word Hot Key
+    reserved => "S",   #  1  word Reserved
     reserved => "L",   #  1 dword Reserved
     reserved => "L",   #  1 dword Reserved
   ) or return;
