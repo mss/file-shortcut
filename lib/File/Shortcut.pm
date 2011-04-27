@@ -258,13 +258,26 @@ sub _readshortcut {
   ));
   delete $header->{flags}->{_};
   
+  # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
     my $len = _read_and_unpack($file, "link_target/size", _ => "S") or return;
     $len = $len->{_};
     
-    # Skip itemidlist, we don't know how to parse it.
-    # TODO: Find out...
-    _read_and_unpack($file, "link_target/skip", _ => "x$len") or return;
+    # [MS-SHLLINK] 2.2.2
+    while (1) {
+      $len = _read_and_unpack($file, "link_target/item/size", _ => "S") or return;
+      $len = $len->{_};
+      
+      # [MS-SHLLINK] 2.2.1
+      last unless $len;
+      
+      # [MS-SHLLINK] 2.2.2
+      $len -= _sizeof("S");
+      
+      # Skip item, we don't know how to parse it.
+      # TODO: Find out...
+      _read_and_unpack($file, "link_target/item/skip", _ => "x$len") or return;
+    }
   }
   
   my $len = _read_and_unpack($file, "link_info/size", _ => "L") or return;
