@@ -126,6 +126,7 @@ sub _read_and_unpack {
   if (@keys == 1) {
     return $buf{_} if $keys[0] eq "_";
   }
+  delete $buf{_};
   return \%buf;
 }
 
@@ -217,7 +218,6 @@ sub _readshortcut {
     _        => "L",   #  1 dword Reserved
     _        => "L",   #  1 dword Reserved
   ) // return;
-  delete $header->{_};
 
   _expect($errstr, "header/magic", "%08x",
     $header->{magic},
@@ -267,7 +267,6 @@ sub _readshortcut {
     prefer_environment_path
     keep_local_id_list_for_unc_target
   ));
-  delete $header->{flags}->{_};
   
   # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
@@ -323,7 +322,6 @@ sub _readshortcut {
           return $xlen;
         }
       ) // return;
-      delete $data->{_};
       
       unless ($flags->{volume_id_and_local_base_path}) {
         delete @{$data}{qw(
@@ -447,7 +445,6 @@ sub _readshortcut {
     not_content_indexed
     encrypted
   ));
-  delete $header->{attrs}->{_};
   
   # Parse 64-bit FileTime.
   for my $key (qw(ctime atime mtime)) {
