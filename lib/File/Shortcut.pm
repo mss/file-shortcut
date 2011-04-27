@@ -374,11 +374,14 @@ sub _readshortcut {
           );
         }
         else {
-          $offset = _read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode",
+          $offset = _read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode_offset",
             "x[L4]L"
           );
           $offset -= _sizeof("L");
-          # TODO: read unicode
+          my $len = index($buf, "\0\0", $offset) - $offset + 1;
+          $volume->{volume_label} = decode('utf-16le', _read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode",
+            "x[$offset]a[$len]"
+          ));
         }
         
         $volume->{drive_type} = eval { given ($volume->{drive_type}) {
