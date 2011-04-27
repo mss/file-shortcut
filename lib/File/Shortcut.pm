@@ -190,8 +190,8 @@ sub _readshortcut {
     atime    => "a[Q]",#  1 qword Last access time
     mtime    => "a[Q]",#  1 qword Modification time
     fsize    => "L",   #  1 dword File length
-    icon     => "L",   #  1 dword Icon number
-    show     => "L",   #  1 dword Show Window
+    icon     => "L",   #  1 dword Icon index
+    show     => "L",   #  1 dword Show command
     hotkey   => "S",   #  1  word Hot Key
     reserved => "S",   #  1  word Reserved
     reserved => "L",   #  1 dword Reserved
@@ -216,13 +216,13 @@ sub _readshortcut {
 
   $header->{flags} = { _raw => $header->{flags},
     _map_bits($header->{flags}, qw(
-      itemidlist
-      fod
-      description
-      relative
-      workdir
-      args
-      icon
+      has_link_target
+      has_link_info
+      has_name
+      has_relative_path
+      has_working_dir
+      has_arguments
+      has_icon_location
     ))
   };
   $header->{attrs} = { _raw => $header->{attrs},
@@ -258,22 +258,22 @@ sub _readshortcut {
     header => $header,
   );
   
-  if ($header->{flags}->{itemidlist}) {
-    my $len = _read_and_unpack($file, "itemidlist/size", _ => "S") or return;
+  if ($header->{flags}->{has_link_target}) {
+    my $len = _read_and_unpack($file, "link_target/size", _ => "S") or return;
     $len = $len->{_};
     
     # Skip itemidlist, we don't know how to parse it.
     # TODO: Find out...
-    _read_and_unpack($file, "itemidlist/skip", _ => "x$len") or return;
+    _read_and_unpack($file, "link_target/skip", _ => "x$len") or return;
   }
   
-  my $len = _read_and_unpack($file, "locinfo/size", _ => "L") or return;
+  my $len = _read_and_unpack($file, "link_info/size", _ => "L") or return;
   $len = $len->{_};
-  unless ($header->{flags}->{fod}) {
-    _read_and_unpack($file, "locinfo/skip", _ => "x$len") or return;
+  unless ($header->{flags}->{has_link_info}) {
+    _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
   }
   else {
-    my $data = _read_and_unpack($file, "locinfo/head",
+    my $data = _read_and_unpack($file, "link_info/head",
       pnext    => "L",
       flags    => "L",
       pvol     => "L",
@@ -289,17 +289,17 @@ sub _readshortcut {
     };
     
     # TODO: Don't skip
-    _read_and_unpack($file, "locinfo/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
+    _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
   }
 
   foreach my $key (qw(
-    description
-    relative
-    workdir
-    args
-    icon
+    name
+    relative_path
+    working_dir
+    arguments
+    icon_location
   )) {
-    if ($header->{flags}->{$key}) {
+    if ($header->{flags}->{"has_$key"}) {
       my $len = _read_and_unpack($file, "$key/size", _ => "S") or return;
       # TODO: WTF? UTF-16?
       $len = $len->{_} * 2;
