@@ -63,8 +63,9 @@ sub _err {
 
 sub _expect {
   my($errstr, $where, $format, $value, $expect) = @_;
-  return 1 if $value ~~ $expect;
-  return _err($errstr, "$where: expected $format, got $format",
+  return 1 if ($value ~~ $expect);
+  return _err($errstr, "%s: expected $format, got $format",
+    $where,
     $expect,
     $value,
   );
@@ -182,7 +183,7 @@ sub _readshortcut {
 
   my $header = _read_and_unpack($file, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
-    guid     => "h32", # 16 bytes GUID for shortcut files
+    guid     => "H32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
     attrs    => "L",   #  1 dword Target file flags
     ctime    => "a[Q]",#  1 qword Creation time
@@ -199,10 +200,12 @@ sub _readshortcut {
 
   _expect($errstr, "header/magic", "%08x",
     $header->{magic},
-    ord("L"));
+    ord("L")
+  ) or return;
   _expect($errstr, "header/guid", "%s",
     $header->{guid},
-    "01140200000000c00000000046");
+    "0114020000000000c000000000000046"
+  ) or return;
 
   $header->{flags} = { _raw => $header->{flags},
     _map_bits($header->{flags}, qw(
