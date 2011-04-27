@@ -280,27 +280,32 @@ sub _readshortcut {
     }
   }
   
-  my $len = _read_and_unpack($file, "link_info/size", _ => "L") or return;
-  $len = $len->{_};
-  unless ($header->{flags}->{has_link_info}) {
-    _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
-  }
-  else {
-    my $data = _read_and_unpack($file, "link_info/head",
-      pnext    => "L",
-      flags    => "L",
-      pvol     => "L",
-      pbase    => "L",
-      pnet     => "L",
-      ppath    => "L",
-    ) or return;
-    $data->{flags} = _map_bits($data->{flags}, qw(
-      local
-      remote
-    ));
-    
-    # TODO: Don't skip
-    _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
+  # [MS-SHLLINK] 2.3
+  if ($header->{flags}->{has_link_info}) {
+    my $len = _read_and_unpack($file, "link_info/size", _ => "L") or return;
+    $len = $len->{_};
+
+    # [MS-SHLLINK] 2.1.1
+    if ($header->{flags}->{force_no_link_info}) {
+      _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
+    }
+    else {
+      my $data = _read_and_unpack($file, "link_info/head",
+        pnext    => "L",
+        flags    => "L",
+        pvol     => "L",
+        pbase    => "L",
+        pnet     => "L",
+        ppath    => "L",
+      ) or return;
+      $data->{flags} = _map_bits($data->{flags}, qw(
+        local
+        remote
+      ));
+      
+      # TODO: Don't skip
+      _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
+    }
   }
 
   # [MS-SHLLINK] 2.4
