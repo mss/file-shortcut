@@ -187,6 +187,7 @@ sub _readshortcut {
   }
   binmode($file) or return _err($errstr, "binmode(): %s", $!);
 
+  # [MS-SHLLINK] 2.1
   my $header = _read_and_unpack($file, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
     clsid    => "H32", # 16 bytes GUID for shortcut files
@@ -199,11 +200,11 @@ sub _readshortcut {
     icon     => "L",   #  1 dword Icon index
     show     => "L",   #  1 dword Show command
     hotkey   => "S",   #  1  word Hot Key
-    reserved => "S",   #  1  word Reserved
-    reserved => "L",   #  1 dword Reserved
-    reserved => "L",   #  1 dword Reserved
+    _        => "S",   #  1  word Reserved
+    _        => "L",   #  1 dword Reserved
+    _        => "L",   #  1 dword Reserved
   ) or return;
-  delete $header->{reserved};
+  delete $header->{_};
 
   _expect($errstr, "header/magic", "%08x",
     $header->{magic},
