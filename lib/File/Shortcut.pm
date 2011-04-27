@@ -243,11 +243,12 @@ sub _readshortcut {
     $header->{$key} = _parse_filetime($header->{$key});
   }
   
+  # [MS-SHLLINK] 2.1
   $header->{show} = eval { given ($header->{show}) {
     when (1) { return "normal" };
-    when (2) { return "minimized" };
     when (3) { return "maximized" };
-    default  { return $header->{show} };
+    when (7) { return "minimized" };
+    default  { return "normal" };
   }};
 
   my %struct = (
