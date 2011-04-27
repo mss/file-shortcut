@@ -13,6 +13,8 @@ our @EXPORT_OK = qw(
 
 use Carp;
 
+use Encode;
+
 
 =head1 NAME
 
@@ -300,11 +302,16 @@ sub _readshortcut {
   )) {
     if ($header->{flags}->{"has_$key"}) {
       my $len = _read_and_unpack($file, "$key/size", _ => "S") or return;
-      # TODO: WTF? UTF-16?
-      $len = $len->{_} * 2;
+      $len = $len->{_};
       next unless $len;
+      
+      # [MS-SHLLINK] 2.1.1; http://msdn.microsoft.com/en-us/library/dd374081.aspx
+      $len *= 2 if $header->{flags}->{is_unicode};
       my $str = _read_and_unpack($file, "$key/data", _ => "a$len") or return;
-      $struct{$key} = $str->{_};
+      $str = $str->{_};
+      $str = decode('utf-16le', $str) if $header->{flags}->{is_unicode};
+      
+      $struct{$key} = $str;
     }
   }
   # TODO: delete $header->{flags};
