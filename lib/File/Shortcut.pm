@@ -13,6 +13,8 @@ our @EXPORT_OK = qw(
 
 use Carp;
 
+use Math::BigInt;
+
 
 =head1 NAME
 
@@ -131,8 +133,16 @@ sub _map_bits {
 sub _parse_filetime {
   # Windows epoch: 1601-01-01.  Precision: 100ns
   # http://msdn.microsoft.com/en-us/library/ms724284.aspx
-  my $value = shift;
-  return ($value / 10 / 1000 / 1000) - 11644473600;
+  # Code taken from DateTime::Format::WindowsFileTime 0.02
+  my $value = Math::BigInt->new("0x" . shift());
+  
+  # Centi-nanoseconds to milliseconds.
+  $value /= 10000;
+  # Fix the epoch.
+  $value -= 11644473600000;
+  # Milliseconds to seconds.
+  $value /= 1000;
+  return $value->numify;
 }
 
 =head2 readshortcut EXPR
@@ -170,9 +180,9 @@ sub _readshortcut {
     guid     => "h32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
     attrs    => "L",   #  1 dword Target file flags
-    ctime    => "Q",   #  1 qword Creation time
-    atime    => "Q",   #  1 qword Last access time
-    mtime    => "Q",   #  1 qword Modification time
+    ctime    => "h16", #  1 qword Creation time
+    atime    => "h16", #  1 qword Last access time
+    mtime    => "h16", #  1 qword Modification time
     fsize    => "L",   #  1 dword File length
     icon     => "L",   #  1 dword Icon number
     show     => "L",   #  1 dword Show Window
