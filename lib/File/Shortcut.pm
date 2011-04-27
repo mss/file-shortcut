@@ -342,7 +342,7 @@ sub _readshortcut {
         }
         
         $data->{$key} -= $hlen;
-        _dbg("link_info/$key: offset " . $data->{$key});
+        _dbg("link_info/$key: offset %d", $data->{$key});
         if ($data->{$key} < 0) {
           return _err($errstr, "link_info/head: malformed offset for $key");
         }
