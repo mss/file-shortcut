@@ -291,22 +291,76 @@ sub _readshortcut {
     }
     else {
       # [MS-SHLLINK] 2.3
-      my $data = _read_and_unpack($file, "link_info/head",
-        header_size                         => "L",
-        flags                               => "L",
-        volume_id_offset                    => "L",
-        local_base_path_offset              => "L",
-        common_network_relative_link_offset => "L",
-        common_path_suffix_offset           => "L",
-      ) or return;
-      $data->{flags} = _map_bits($data->{flags}, qw(
+      my $hlen = _read_and_unpack($file, "link_info/head/size", _ => "L") or return;
+      $hlen = $hlen->{_};
+      $len -= $hlen - _sizeof("L");
+      
+      my $flags = _read_and_unpack($file, "link_info/head/flags", _ => "L") or return;
+      $flags = _map_bits($flags->{_}, qw(
         volume_id_and_local_base_path
         common_network_relative_link_and_path_suffix
       ));
-      $len -= _sizeof("L6");
       
-      # TODO: Don't skip
-      _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
+      my $data = _read_and_unpack($file, "link_info/head/offsets",
+        volume_id                    => "L",
+        local_base_path              => "L",
+        common_network_relative_link => "L",
+        common_path_suffix           => "L",
+        local_base_path_unicode      => "L" . ($hlen >= 0x24)*1,
+        common_path_suffix_unicode   => "L" . ($hlen >= 0x24)*1,
+        _                            => "x" . eval {
+          my $xlen = $hlen;
+          $xlen -= _sizeof("L3L4L2");
+          $xlen += _sizeof("L2") if $xlen < 0;
+          return $xlen;
+        }
+      ) or return;
+      delete $data->{_};
+      
+      unless ($flags->{volume_id_and_local_base_path}) {
+        delete @{$data}{qw(
+          volume_id
+          local_base_path
+          local_base_path_unicode
+        )};
+      }
+      unless ($flags->{common_network_relative_link_and_path_suffix}) {
+        delete @{$data}{qw(
+          common_network_relative_link
+        )};
+      }
+      
+      foreach my $key (keys %{$data}) {
+        unless (defined $data->{$key}) {
+          delete $data->{$key};
+          next;
+        }
+        
+        $data->{$key} -= $hlen;
+        _dbg("link_info/$key: offset " . $data->{$key});
+        if ($data->{$key} < 0) {
+          return _err($errstr, "link_info/head: malformed offset for $key");
+        }
+      }
+      
+      my $buf = _read_and_unpack($file, "link_info/data", _ => "a$len") or return;
+      $buf = $buf->{_};
+      
+      # [MS-SHLLINK] 2.3.1
+      #if (defined $data->{volume_id}) {
+      #  my $offset = $data->{volume_id};
+      #  my @volid = unpack("x[$offset]VVV", $
+      #}
+      
+      foreach my $key (qw(
+        common_path_suffix
+        local_base_path
+      )) {
+        next unless defined $data->{$key};
+        my $offset = $data->{$key};
+        $data->{$key} = unpack("x[$offset]Z", $buf);
+        _dbg("$key ($offset): " . $data->{$key});
+      }
     }
   }
 
