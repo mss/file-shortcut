@@ -91,19 +91,17 @@ sub _read_and_unpack {
   my($fh, $where) = (shift, shift);
   
   my @keys;
-  my $len = 0;
   my $template = "(";
   while (@_) {
-    my($key, $t) = (shift, shift);
-    push(@keys, $key);
-    $template .= $t;
-    $len += _sizeof($t);
+    push(@keys, shift());
+    $template .= shift();
   }
   $template .= ")<";
   
-  _dbg("%s: read %d: %s", $where, $len, $template);
   my $buf;
   if (ref $fh) {
+    my $len = _sizeof($template);
+    _dbg("%s: read (%d): %s", $where, $len, $template);
     if (read($fh, $buf, $len) != $len) {
       return _err($errstr, "read(): %s: expected %d bytes (%s)",
         $where,
@@ -111,11 +109,13 @@ sub _read_and_unpack {
         $template,
       );
     }
+    _dbg(" -> %s", unpack("h" . $len * 2, $buf)) if $debug;
   }
   else {
+    _dbg("%s: read (buf): %s", $where, $template);
     $buf = $fh;
+    _dbg(" -> %s", unpack("h*", $buf)) if $debug;
   }
-  _dbg(" -> %s", unpack("h" . $len * 2, $buf)) if $debug;
   
   my %buf;
   @buf{@keys} = unpack($template, $buf);
@@ -352,10 +352,46 @@ sub _readshortcut {
       $buf = $buf->{_};
       
       # [MS-SHLLINK] 2.3.1
-      #if (defined $data->{volume_id}) {
-      #  my $offset = $data->{volume_id};
-      #  my @volid = unpack("x[$offset]VVV", $
-      #}
+      if (defined $data->{volume_id}) {
+        my $offset = $data->{volume_id};
+        my $size = _read_and_unpack($buf, "link_info/data/volume_id/size",
+          _ => "x[$offset]L"
+        )->{_};
+          
+        my $buf = _read_and_unpack($buf, "link_info/data/volume_id",
+          _ => "x[$offset]x[L]a[$size]")->{_};
+        my $volume = _read_and_unpack($buf, "link_info/data/volume_id/head",
+          drive_type          => "L",
+          drive_serial_number => "L",
+          volume_label_offset => "L",
+        );
+        
+        my $offset = delete $volume->{volume_label_offset};
+        if ($offset != 0x14) {
+          $offset -= _sizeof("L");
+          $volume->{volume_label} = _read_and_unpack($buf, "link_info/data/volume_id",
+            _ => "x[$offset]Z*"
+          )->{_};
+        }
+        else {
+          $offset = _read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode",
+            _ => "x[L4]L"
+          )->{_};
+          $offset -= _sizeof("L");
+          # TODO: read unicode
+        }
+        
+        $volume->{drive_type} = eval { given ($volume->{drive_type}) {
+          when (0) { return "unknown" }
+          when (1) { return "no_root_dir" }
+          when (2) { return "removable" }
+          when (3) { return "fixed" }
+          when (4) { return "remote" }
+          when (5) { return "cdrom" }
+          when (6) { return "ramdisk" }
+          default  { return $volume->{drive_type} }
+        }};
+      }
       
       foreach my $key (qw(
         common_path_suffix
@@ -363,8 +399,8 @@ sub _readshortcut {
       )) {
         next unless defined $data->{$key};
         my $offset = $data->{$key};
-        $data->{$key} = unpack("x[$offset]Z", $buf);
-        _dbg("$key ($offset): " . $data->{$key});
+        $data->{$key} = _read_and_unpack($buf, "link_info/data/$key",
+          "_" => "x[$offset]Z*")->{_};
       }
     }
   }
