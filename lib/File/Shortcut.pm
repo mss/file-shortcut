@@ -197,16 +197,20 @@ sub _readshortcut {
     reserved => "L",   #  1 dword Reserved
   ) or return;
   delete $header->{reserved};
-  
-  $header->{clsid} =~ s/^(.{8})(.{4})(.{4})(.{4})(.{12})/$1-$2-$3-$4-$5/;
 
   _expect($errstr, "header/magic", "%08x",
     $header->{magic},
     ord("L")
   ) or return;
+  # Yes, these are the same:
+  #   "01140200-0000-0000-c000-000000000046"
+  #   {00021401-0000-0000-C000-000000000046} (cf. [MS-SHLLINK] 2.1)
+  # Somebody please shoot the guy who invented the CLSID/GUID format
+  # with its mixture of native and binary representation.
+  # http://msdn.microsoft.com/en-us/library/aa373931.aspx
   _expect($errstr, "header/clsid", "%s",
     $header->{clsid},
-    "01140200-0000-0000-c000-000000000046" # TODO: Wrong: cf. [MS-SHLLINK] 2.1
+    join("", qw(01140200 0000 0000 c000 000000000046))
   ) or return;
 
   $header->{flags} = { _raw => $header->{flags},
