@@ -183,7 +183,7 @@ sub _readshortcut {
 
   my $header = _read_and_unpack($file, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
-    guid     => "H32", # 16 bytes GUID for shortcut files
+    clsid    => "H32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
     attrs    => "L",   #  1 dword Target file flags
     ctime    => "a[Q]",#  1 qword Creation time
@@ -197,14 +197,16 @@ sub _readshortcut {
     reserved => "L",   #  1 dword Reserved
   ) or return;
   delete $header->{reserved};
+  
+  $header->{clsid} =~ s/^(.{8})(.{4})(.{4})(.{4})(.{12})/$1-$2-$3-$4-$5/;
 
   _expect($errstr, "header/magic", "%08x",
     $header->{magic},
     ord("L")
   ) or return;
-  _expect($errstr, "header/guid", "%s",
-    $header->{guid},
-    "0114020000000000c000000000000046"
+  _expect($errstr, "header/clsid", "%s",
+    $header->{clsid},
+    "01140200-0000-0000-c000-000000000046" # TODO: Wrong: cf. [MS-SHLLINK] 2.1
   ) or return;
 
   $header->{flags} = { _raw => $header->{flags},
