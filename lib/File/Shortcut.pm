@@ -283,28 +283,30 @@ sub _readshortcut {
   # [MS-SHLLINK] 2.3
   if ($header->{flags}->{has_link_info}) {
     my $len = _read_and_unpack($file, "link_info/size", _ => "L") or return;
-    $len = $len->{_};
+    $len = $len->{_} - _sizeof("L");
 
     # [MS-SHLLINK] 2.1.1
     if ($header->{flags}->{force_no_link_info}) {
       _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
     }
     else {
+      # [MS-SHLLINK] 2.3
       my $data = _read_and_unpack($file, "link_info/head",
-        pnext    => "L",
-        flags    => "L",
-        pvol     => "L",
-        pbase    => "L",
-        pnet     => "L",
-        ppath    => "L",
+        header_size                         => "L",
+        flags                               => "L",
+        volume_id_offset                    => "L",
+        local_base_path_offset              => "L",
+        common_network_relative_link_offset => "L",
+        common_path_suffix_offset           => "L",
       ) or return;
       $data->{flags} = _map_bits($data->{flags}, qw(
-        local
-        remote
+        volume_id_and_local_base_path
+        common_network_relative_link_and_path_suffix
       ));
+      $len -= _sizeof("L6");
       
       # TODO: Don't skip
-      _read_and_unpack($file, "link_info/skip", _ => "x" . ($len - _sizeof("L7"))) or return;
+      _read_and_unpack($file, "link_info/skip", _ => "x$len") or return;
     }
   }
 
