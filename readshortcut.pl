@@ -9,6 +9,10 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
+use Carp;
+$Carp::Verbose = 1;
+$SIG{__DIE__} = \&croak;
+
 use File::Shortcut qw(readshortcut);
 
 use Data::Dumper;
