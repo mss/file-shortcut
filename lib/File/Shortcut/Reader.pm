@@ -211,16 +211,10 @@ sub read_link_info {
         # "If the value of this field is 0x00000014, it MUST be ignored,
         # and the value of the VolumeLabelOffsetUnicode field MUST be used 
         # to locate the volume label string."
-        $offset = delete $data->{volume_label_offset};
-        my $utf16 = $offset == 0x14;
-        $offset = $data->{volume_label_unicode_offset} if $utf16;
-        delete $data->{volume_label_unicode_offset};
-        # The buffer doesn't contain the size field, so subtract it from
-        # the offset.
-        $offset -= sizeof("L");
-        # Read the zero-terminated string, either ASCII or UTF-16.
-        $data->{volume_label} = read_and_unpack_strz($buf, "link_info/data/volume_id/volume_label",
-          $offset, $utf16
+        read_and_store_strz($buf, "link_info/data/volume_id",
+          $data, "volume_label", sizeof("L"), sub {
+            $_ == 0x14
+          }
         );
 
         # Map the drive types, defaulting to unknown.
@@ -267,15 +261,10 @@ sub read_link_info {
         # field MUST be present if the value of the FooNameOffset field is 
         # greater than 0x00000014; otherwise, this field MUST NOT be present."
         foreach my $key (qw(net_name device_name)) {
-          my $offset = delete $data->{"${key}_offset"};
-          next unless defined $offset;
-          my $utf16 = $offset > 0x14;
-          $offset = $data->{"${key}_unicode_offset"} if $utf16;
-          delete $data->{"${key}_unicode_offset"};
-          $offset -= sizeof("L");
-
-          $data->{$key} = read_and_unpack_strz($buf, "link_info/data/common_network_relative_link/$key",
-            $offset, $utf16
+          read_and_store_strz($buf, "link_info/data/common_network_relative_link",
+            $data, $key, sizeof("L"), sub {
+              $_ > 0x14
+            }
           );
         }
 
@@ -312,6 +301,33 @@ sub read_string_data {
   }
 
   return %result;
+}
+
+
+sub read_and_store_strz {
+  my($buf, $where, $data, $key, $skip, $utf16) = @_;
+
+  # Retrieve the ASCII offset.
+  my $offset = delete $data->{"${key}_offset"};
+
+  # We might have to decide about the string format based on the offset, 
+  # allow a callback for the UTF-16 flag.
+  if (ref $utf16 eq 'CODE') {
+    local $_ = $offset;
+    $utf16 = $utf16->();
+  }
+
+  # Retrieve (and/or) dump the UTF-16 offset.
+  $offset = $data->{"${key}_unicode_offset"} if $utf16;
+  delete $data->{"${key}_unicode_offset"};
+
+  # We might have to fix up the offset due to skipped size fields.
+  $offset -= $skip || 0;
+
+  # Read and store the zero-terminated string, either ASCII or UTF-16.
+  return $data->{$key} = read_and_unpack_strz($buf, "$where/$key",
+    $offset, $utf16
+  );
 }
 
 
