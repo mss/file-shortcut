@@ -55,21 +55,35 @@ sub sizeof {
 }
 
 
-sub map_bits {
+sub unpack_bits {
   my $value = shift;
 
   my %result = (
     _raw => $value,
   );
 
-  while (@_) {
-    my $key = shift;
-    next unless $key;
+  foreach my $key (@_) {
     $result{$key} = $value & 1;
     $value >>= 1;
   }
+  delete $result{_};
 
   return \%result;
+}
+
+sub pack_bits {
+  my @keys = @{shift()};
+
+  my $result = 0;
+
+  my %bits = map { $_ => 1 } @_;
+  foreach my $key (reverse(@keys)) {
+    $result <<= 1;
+    next if $key eq "_";
+    $result |= $bits{$key} || 0;
+  }
+
+  return $result;
 }
 
 

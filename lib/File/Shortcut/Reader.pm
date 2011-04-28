@@ -13,9 +13,10 @@ use File::Shortcut;
 use File::Shortcut::Util qw(
   err expect dbg
   sizeof
-  map_bits
+  unpack_bits
   parse_filetime
 );
+use File::Shortcut::Data;
 
 
 sub readshortcut {
@@ -57,39 +58,12 @@ sub readshortcut {
     join("", qw(01140200 0000 0000 c000 000000000046))
   );
 
-  my %struct = (
-    header => $header,
+  $header->{flags} = unpack_bits($header->{flags},
+    @File::Shortcut::Data::HEADER_FLAGS
   );
 
-  # [MS-SHLLINK] 2.1.1
-  $header->{flags} = map_bits($header->{flags}, qw(
-    has_link_target
-    has_link_info
-    has_name
-    has_relative_path
-    has_working_dir
-    has_arguments
-    has_icon_location
-    is_unicode
-    force_no_link_info
-    has_exp_string
-    run_in_separate_process
-    _
-    has_darwin_id
-    run_as_user
-    has_exp_icon
-    no_pidl_alias
-    _
-    run_with_shim_layer
-    force_no_link_track
-    enable_target_metadata
-    disable_link_path_tracking
-    disable_known_folder_alias
-    allow_link_to_link
-    unalias_on_save
-    prefer_environment_path
-    keep_local_id_list_for_unc_target
-  ));
+  # This is what we return in the end.
+  my %struct;
 
   # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
@@ -125,11 +99,9 @@ sub readshortcut {
       my $hlen = read_and_unpack($fh, "link_info/head/size", "L");
       $len -= $hlen - sizeof("L");
 
-      my $flags = read_and_unpack($fh, "link_info/head/flags", "L");
-      $flags = map_bits($flags, qw(
-        volume_id_and_local_base_path
-        common_network_relative_link_and_path_suffix
-      ));
+      my $flags = unpack_bits(read_and_unpack($fh, "link_info/head/flags", "L"),
+        @File::Shortcut::Data::LINK_INFO_FLAGS
+      );
 
       my $data = read_and_unpack($fh, "link_info/head/offsets",
         volume_id                    => "L",
@@ -253,24 +225,9 @@ sub readshortcut {
   }
   # TODO: delete $header->{flags};
 
-  # [MS-SHLLINK] 2.1.2
-  $header->{attrs} = map_bits($header->{attrs}, qw(
-    readonly
-    hidden
-    system
-    _
-    directory
-    archive
-    _
-    normal
-    temporary
-    sparse_file
-    reparse_point
-    compressed
-    offline
-    not_content_indexed
-    encrypted
-  ));
+  $header->{attrs} = unpack_bits($header->{attrs},
+    @File::Shortcut::Data::FILE_ATTRIBUTES
+  );
 
   # Parse 64-bit FileTime.
   for my $key (qw(ctime atime mtime)) {
@@ -285,6 +242,7 @@ sub readshortcut {
     default  { return "normal" };
   }};
 
+  $struct{header} = $header;
   return \%struct;
 }
 
