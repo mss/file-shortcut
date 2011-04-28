@@ -19,20 +19,11 @@ use File::Shortcut::Util qw(
 
 
 sub readshortcut {
-  my($file) = @_;
+  my($fh) = @_;
   my $dbg = $File::Shortcut::Debug;
 
-  if (ref $file) {
-    croak "parameter must be a file handle (or path)" if tell $file == -1;
-  }
-  else {
-    open my $fh, '<', $file or return err("open(%s): %s", $file, $!);
-    $file = $fh;
-  }
-  binmode($file) || err("binmode(): %s", $!);
-
   # [MS-SHLLINK] 2.1
-  my $header = read_and_unpack($file, "header",
+  my $header = read_and_unpack($fh, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
     clsid    => "H32", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
@@ -100,11 +91,11 @@ sub readshortcut {
 
   # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
-    my $len = read_and_unpack($file, "link_target/size", "S");
+    my $len = read_and_unpack($fh, "link_target/size", "S");
 
     # [MS-SHLLINK] 2.2.2
     while (1) {
-      $len = read_and_unpack($file, "link_target/item/size", "S");
+      $len = read_and_unpack($fh, "link_target/item/size", "S");
 
       # [MS-SHLLINK] 2.2.1
       last unless $len;
@@ -114,31 +105,31 @@ sub readshortcut {
 
       # Skip item, we don't know how to parse it.
       # TODO: Find out...
-      read_and_unpack($file, "link_target/item/skip", skip => "x[$len]");
+      read_and_unpack($fh, "link_target/item/skip", skip => "x[$len]");
     }
   }
 
   # [MS-SHLLINK] 2.3
   if ($header->{flags}->{has_link_info}) {
-    my $len = read_and_unpack($file, "link_info/size", "L");
+    my $len = read_and_unpack($fh, "link_info/size", "L");
     $len -= sizeof("L");
 
     # [MS-SHLLINK] 2.1.1
     if ($header->{flags}->{force_no_link_info}) {
-      read_and_unpack($file, "link_info/skip", skip => "x[$len]");
+      read_and_unpack($fh, "link_info/skip", skip => "x[$len]");
     }
     else {
       # [MS-SHLLINK] 2.3
-      my $hlen = read_and_unpack($file, "link_info/head/size", "L");
+      my $hlen = read_and_unpack($fh, "link_info/head/size", "L");
       $len -= $hlen - sizeof("L");
 
-      my $flags = read_and_unpack($file, "link_info/head/flags", "L");
+      my $flags = read_and_unpack($fh, "link_info/head/flags", "L");
       $flags = map_bits($flags, qw(
         volume_id_and_local_base_path
         common_network_relative_link_and_path_suffix
       ));
 
-      my $data = read_and_unpack($file, "link_info/head/offsets",
+      my $data = read_and_unpack($fh, "link_info/head/offsets",
         volume_id                    => "L",
         local_base_path              => "L",
         common_network_relative_link => "L",
@@ -179,7 +170,7 @@ sub readshortcut {
         }
       }
 
-      my $buf = read_and_unpack($file, "link_info/data", "a[$len]");
+      my $buf = read_and_unpack($fh, "link_info/data", "a[$len]");
 
       # [MS-SHLLINK] 2.3.1
       if (defined $data->{volume_id}) {
@@ -247,12 +238,12 @@ sub readshortcut {
     icon_location
   )) {
     if ($header->{flags}->{"has_$key"}) {
-      my $len = read_and_unpack($file, "$key/size", "S");
+      my $len = read_and_unpack($fh, "$key/size", "S");
       next unless $len;
 
       # [MS-SHLLINK] 2.1.1; http://msdn.microsoft.com/en-us/library/dd374081.aspx
       $len *= 2 if $header->{flags}->{is_unicode};
-      my $str = read_and_unpack($file, "$key/data", "a[$len]");
+      my $str = read_and_unpack($fh, "$key/data", "a[$len]");
       $str = decode('utf-16le', $str) if $header->{flags}->{is_unicode};
 
       $struct{$key} = $str;

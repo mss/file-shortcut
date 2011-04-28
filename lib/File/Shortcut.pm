@@ -11,7 +11,11 @@ our @EXPORT_OK = qw(
   readshortcut
 );
 
+use Carp;
+
 use Try::Tiny;
+
+use File::Shortcut::Util qw(err);
 
 
 =head1 NAME
@@ -70,6 +74,16 @@ handle.>  If EXPR is omitted, uses C<$_>.
 
 sub readshortcut {
   my $file = @_ ? $_[0] : $_;
+
+  if (ref $file) {
+    croak "EXPR must be a file handle (or path)" if tell $file == -1;
+  }
+  else {
+    open my $fh, '<', $file or err("open(%s): %s", $file, $!);
+    $file = $fh;
+  }
+  binmode($file) or err("binmode(): %s", $!);
+
   require File::Shortcut::Reader;
   return try {
     return File::Shortcut::Reader::readshortcut($file);
