@@ -30,6 +30,9 @@ perldoc command.
 
 You can also look for information at:
 
+    GitHub, the code repository
+        https://github.com/mss/file-shortcut
+
     RT, CPAN's request tracker
         http://rt.cpan.org/NoAuth/Bugs.html?Dist=File-Shortcut
 
