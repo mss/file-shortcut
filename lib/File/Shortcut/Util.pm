@@ -50,8 +50,8 @@ sub dbg {
 
 
 sub sizeof {
-  my $type = shift;
-  return length(pack("x[$type]"));
+  my $template = shift;
+  return length(pack("x[$template]"));
 }
 
 
