@@ -83,6 +83,7 @@ sub read_shortcut {
 
   # Parse and return the rest of the file.
   return {
+    path => "",
     header => $header,
     read_link_target($fh, $flags),
     read_link_info($fh, $flags),
@@ -199,6 +200,8 @@ sub read_link_info {
           $data, $key, 0, defined $data->{"${key}_unicode_offset"}
         );
       }
+      $result{path} = ($data->{local_base_path} || "")
+                    . ($data->{common_path_suffix} || "");
 
       # [MS-SHLLINK] 2.3.1
       if (defined $data->{volume_id_offset}) {
