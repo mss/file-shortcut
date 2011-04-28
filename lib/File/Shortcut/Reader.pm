@@ -141,13 +141,13 @@ sub read_link_info {
       dbg("link_info/head/flags/%s: %d", $flags);
 
       my $data = read_and_unpack($fh, "link_info/head/offsets",
-        volume_id                    => "L",
-        local_base_path              => "L",
-        common_network_relative_link => "L",
-        common_path_suffix           => "L",
-        local_base_path_unicode      => "L" . ($hlen >= 0x24)*1,
-        common_path_suffix_unicode   => "L" . ($hlen >= 0x24)*1,
-        _                            => "x" . eval {
+        volume_id_offset                    => "L",
+        local_base_path_offset              => "L",
+        common_network_relative_link_offset => "L",
+        common_path_suffix_offset           => "L",
+        local_base_path_unicode_offset      => "L" . ($hlen >= 0x24)*1,
+        common_path_suffix_unicode_offset   => "L" . ($hlen >= 0x24)*1,
+        _                                   => "x" . eval {
           my $xlen = $hlen;
           $xlen -= sizeof("L3L4L2");
           $xlen += sizeof("L2") if $xlen < 0;
@@ -157,48 +157,52 @@ sub read_link_info {
 
       unless ($flags->{volume_id_and_local_base_path}) {
         delete @{$data}{qw(
-          volume_id
-          local_base_path
-          local_base_path_unicode
+          volume_id_offset
+          local_base_path_offset
+          local_base_path_unicode_offset
         )};
       }
       unless ($flags->{common_network_relative_link_and_path_suffix}) {
         delete @{$data}{qw(
-          common_network_relative_link
+          common_network_relative_link_offset
         )};
       }
 
       foreach my $key (keys %{$data}) {
+        # Clean up data by removing any undefined values.
         unless (defined $data->{$key}) {
           delete $data->{$key};
           next;
         }
 
+        # Fixup offsets.
         $data->{$key} -= $hlen;
-        dbg("link_info/$key: offset %d", $data->{$key});
+        dbg("link_info/head/$key: offset %d", $data->{$key});
         if ($data->{$key} < 0) {
           err("link_info/head: malformed offset for $key");
         }
       }
 
       # Slurp the whole struct so we can jump around freely.
+      # TODO: do this earlier to safe some limbo above
       my $buf = read_and_unpack($fh, "link_info/data", "a[$len]");
 
-      # These are easy as they are just zero-terminated strings.
+      # "FooUnicode (variable): An optional, NULL–terminated, Unicode string
+      # [...]. This field can be present only if the value of the 
+      # LinkInfoHeaderSize field is greater than or equal to 0x00000024."
+      # I guess the can is supposed to be a MAY...
       foreach my $key (qw(
-        common_path_suffix
         local_base_path
+        common_path_suffix
       )) {
-        next unless defined $data->{$key};
-        my $offset = $data->{$key};
-        $data->{$key} = read_and_unpack_asciz($buf, "link_info/data/$key",
-          $offset
+        read_and_store_strz($buf, "link_info/data",
+          $data, $key, 0, defined $data->{"${key}_unicode_offset"}
         );
       }
 
       # [MS-SHLLINK] 2.3.1
-      if (defined $data->{volume_id}) {
-        my $offset = $data->{volume_id};
+      if (defined $data->{volume_id_offset}) {
+        my $offset = $data->{volume_id_offset};
         my $buf = read_and_unpack($buf, "link_info/data/volume_id",
           "x[$offset]L/a");
         my $data = read_and_unpack($buf, "link_info/data/volume_id/head",
@@ -226,8 +230,8 @@ sub read_link_info {
       }
 
       # [MS-SHLLINK] 2.3.2
-      if (defined $data->{common_network_relative_link}) {
-        my $offset = $data->{volume_id};
+      if (defined $data->{common_network_relative_link_offset}) {
+        my $offset = $data->{common_network_relative_link_offset};
         my $buf = read_and_unpack($buf, "link_info/data/common_network_relative_link",
           "x[$offset]L/a");
         my $data = read_and_unpack($buf, "link_info/data/common_network_relative_link/head",
@@ -313,13 +317,16 @@ sub read_and_store_strz {
   # We might have to decide about the string format based on the offset, 
   # allow a callback for the UTF-16 flag.
   if (ref $utf16 eq 'CODE') {
-    local $_ = $offset;
+    local $_ = $offset // -1;
     $utf16 = $utf16->();
   }
 
   # Retrieve (and/or) dump the UTF-16 offset.
   $offset = $data->{"${key}_unicode_offset"} if $utf16;
   delete $data->{"${key}_unicode_offset"};
+
+  # Step out early if something's wrong.
+  return unless defined $offset;
 
   # We might have to fix up the offset due to skipped size fields.
   $offset -= $skip || 0;
