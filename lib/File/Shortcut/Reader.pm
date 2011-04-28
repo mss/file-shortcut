@@ -218,7 +218,7 @@ sub read_link_info {
           ));
         }
 
-        $volume->{drive_type} = unpack_index($volume->{drive_type}, undef,
+        $volume->{drive_type} = unpack_index($volume->{drive_type}, 0,
           @File::Shortcut::Data::DRIVE_TYPE
         );
       }
