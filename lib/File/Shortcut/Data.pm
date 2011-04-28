@@ -84,5 +84,57 @@ our @DRIVE_TYPE = qw(
   ramdisk
 );
 
+# Defined in [MS-SHLLINK] 2.3.2
+our @COMMON_NETWORK_RELATIVE_LINK_FLAGS = qw(
+  valid_device
+  valid_net_type
+);
+
+# Defined in [MS-SHLLINK] 2.3.2
+our @NETWORK_PROVIDER_TYPE = qw(
+  avid
+  docuspace
+  mangosoft
+  sernet
+  riverfront1
+  riverfront2
+  decorb
+  protstor
+  fj_redir
+  distinct
+  twins
+  rdr2sample
+  csc
+  3in1
+  _
+  extendnet
+  stac
+  foxbat
+  yahoo
+  exifs
+  dav
+  knoware
+  object_dire
+  masfax
+  hob_nfs
+  shiva
+  ibmal
+  lock
+  termsrv
+  srt
+  quincy
+  openafs
+  avid1
+  dfs
+  kwnp
+  zenworks
+  driveonweb
+  vmware
+  rsfx
+  mfiles
+  ms_nfs
+  google
+);
+
 
 1;

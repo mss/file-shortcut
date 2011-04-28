@@ -80,7 +80,7 @@ sub sizeof {
 
 sub unpack_index {
   my($index, $default) = (shift, shift);
-  $default //= $index;
+  $default = $index if defined $default and $default < 0;
 
   my $value = $_[$index];
   return $default unless defined $value;

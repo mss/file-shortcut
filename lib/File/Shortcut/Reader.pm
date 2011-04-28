@@ -242,7 +242,50 @@ sub read_link_info {
         $result{volume_id} = $volume;
       }
 
-      
+      # [MS-SHLLINK] 2.3.2
+      if (defined $data->{common_network_relative_link}) {
+        my $offset = $data->{volume_id};
+        my $buf = read_and_unpack($buf, "link_info/data/common_network_relative_link",
+          "x[$offset]L/a");
+        my $data = read_and_unpack($buf, "link_info/data/common_network_relative_link/head",
+          flags                      => "L",
+          net_name_offset            => "L",
+          device_name_offset         => "L",
+          net_provider_type          => "L",
+          net_name_offset_unicode    => "L" . (length($buf) >= sizeof("L5"))*1,
+          device_name_offset_unicode => "L" . (length($buf) >= sizeof("L6"))*1,
+        );
+        $data->{flags} = unpack_bits($data->{flags},
+          @File::Shortcut::Data::COMMON_NETWORK_RELATIVE_LINK_FLAGS
+        );
+        dbg("link_info/data/common_network_relative_link/flags/%s: %d", $data->{flags});
+
+        unless ($data->{flags}->{valid_device}) {
+          delete $data->{device_name_offset};
+          delete $data->{device_name_unicode_offset};
+        }
+        if ($data->{flags}->{valid_net_type}) {
+          $data->{net_provider_type} = unpack_index($data->{net_provider_type} - 0x001a0000, undef,
+            @File::Shortcut::Data::NETWORK_PROVIDER_TYPE
+          );
+        }
+        else {
+          $data->{net_provider_type} = undef;
+        }
+
+        foreach my $key (qw(net_name device_name)) {
+          my $offset = delete $data->{"${key}_offset"};
+          next unless defined $offset;
+          my $utf16 = $offset > 0x14;
+          $offset = $data->{"${key}_unicode_offset"} if $utf16;
+          delete $data->{"${key}_unicode_offset"};
+          $offset -= sizeof("L");
+
+          $data->{$key} = read_and_unpack_strz($buf, "link_info/data/common_network_relative_link/$key",
+            $offset, $utf16
+          );
+        }
+      }
     }
   }
 
@@ -336,6 +379,12 @@ sub read_and_unpack_str {
   my $str = read_and_unpack($fh, $where, "x[$offset]a[$len]");
   $str = decode('utf-16le', $str) if $utf16;
   return $str;
+}
+
+sub read_and_unpack_strz {
+  my($utf16) = pop();
+
+  return $utf16 ? read_and_unpack_utf16z(@_) : read_and_unpack_asciz(@_);
 }
 
 sub read_and_unpack_asciz {
