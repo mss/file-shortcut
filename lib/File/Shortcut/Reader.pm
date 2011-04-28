@@ -13,7 +13,7 @@ use File::Shortcut;
 use File::Shortcut::Util qw(
   err expect dbg
   sizeof
-  unpack_bits
+  unpack_bits unpack_index
   parse_filetime
 );
 use File::Shortcut::Data;
@@ -74,12 +74,9 @@ sub read_shortcut {
   }
 
   # Map the requested window state [MS-SHLLINK] 2.1
-  $header->{show} = eval { given ($header->{show}) {
-    when (1) { return "normal" };
-    when (3) { return "maximized" };
-    when (7) { return "minimized" };
-    default  { return "normal" };
-  }};
+  $header->{show} = unpack_index($header->{show}, 1,
+    @File::Shortcut::Data::SHOW_COMMAND
+  );
 
   # This is what we return in the end.
   my %struct = (
@@ -221,16 +218,9 @@ sub read_link_info {
           ));
         }
 
-        $volume->{drive_type} = eval { given ($volume->{drive_type}) {
-          when (0) { return "unknown" }
-          when (1) { return "no_root_dir" }
-          when (2) { return "removable" }
-          when (3) { return "fixed" }
-          when (4) { return "remote" }
-          when (5) { return "cdrom" }
-          when (6) { return "ramdisk" }
-          default  { return $volume->{drive_type} }
-        }};
+        $volume->{drive_type} = unpack_index($volume->{drive_type}, undef,
+          @File::Shortcut::Data::VOLUME_ID_DRIVE_TYPE
+        );
       }
 
       foreach my $key (qw(

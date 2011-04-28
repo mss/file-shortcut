@@ -78,6 +78,26 @@ sub sizeof {
 }
 
 
+sub unpack_index {
+  my($index, $default) = (shift, shift);
+  $default //= $index;
+
+  my $value = $_[$index];
+  return $default unless defined $value;
+  return $default if $value eq "_";
+  return $value;
+}
+
+sub pack_index {
+  my($keys, $key, $default) = @_;
+
+  foreach my $i (0 .. $#{$keys}) {
+    return $keys->[$i] if $keys->[$i] eq $key;
+  }
+  return $default // 0;
+}
+
+
 sub unpack_bits {
   my $value = shift;
 

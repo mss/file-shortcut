@@ -36,6 +36,18 @@ our @HEADER_FLAGS = qw(
   keep_local_id_list_for_unc_target
 );
 
+# Defined in [MS-SHLLINK] 2.1
+our @SHOW_COMMAND = qw(
+  _
+  normal
+  _
+  maximized
+  _
+  _
+  _
+  minimized
+);
+
 # Defined in [MS-SHLLINK] 2.1.2
 our @FILE_ATTRIBUTES = qw(
   readonly
@@ -61,6 +73,16 @@ our @LINK_INFO_FLAGS = qw(
   common_network_relative_link_and_path_suffix
 );
 
+# Defined in [MS-SHLLINK] 2.3.1
+our @VOLUME_ID_DRIVE_TYPE = qw(
+  unknown
+  no_root_dir
+  removable
+  fixed
+  remote
+  cdrom
+  ramdisk
+);
 
 
 1;
