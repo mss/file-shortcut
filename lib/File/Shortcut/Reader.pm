@@ -199,12 +199,8 @@ sub read_link_info {
       # [MS-SHLLINK] 2.3.1
       if (defined $data->{volume_id}) {
         my $offset = $data->{volume_id};
-        my $size = read_and_unpack($buf, "link_info/data/volume_id/size",
-          "x[$offset]L"
-        );
-
         my $buf = read_and_unpack($buf, "link_info/data/volume_id",
-          "x[$offset]x[L]a[$size]");
+          "x[$offset]L/a");
         my $volume = read_and_unpack($buf, "link_info/data/volume_id/head",
           drive_type          => "L",
           drive_serial_number => "L",
@@ -223,7 +219,7 @@ sub read_link_info {
         }
         else {
           $offset = read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode_offset",
-            "x[L4]L"
+            "x[L3]L"
           );
           $offset -= sizeof("L");
           $volume->{volume_label} = read_and_unpack_utf16z($buf, "link_info/data/volume_id/volume_label_unicode",
