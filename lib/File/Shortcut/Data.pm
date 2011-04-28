@@ -74,7 +74,7 @@ our @LINK_INFO_FLAGS = qw(
 );
 
 # Defined in [MS-SHLLINK] 2.3.1
-our @VOLUME_ID_DRIVE_TYPE = qw(
+our @DRIVE_TYPE = qw(
   unknown
   no_root_dir
   removable

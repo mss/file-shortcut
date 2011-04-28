@@ -219,7 +219,7 @@ sub read_link_info {
         }
 
         $volume->{drive_type} = unpack_index($volume->{drive_type}, undef,
-          @File::Shortcut::Data::VOLUME_ID_DRIVE_TYPE
+          @File::Shortcut::Data::DRIVE_TYPE
         );
       }
 
