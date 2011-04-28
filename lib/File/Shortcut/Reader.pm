@@ -202,9 +202,10 @@ sub read_link_info {
         my $buf = read_and_unpack($buf, "link_info/data/volume_id",
           "x[$offset]L/a");
         my $volume = read_and_unpack($buf, "link_info/data/volume_id/head",
-          drive_type          => "L",
-          drive_serial_number => "L",
-          volume_label_offset => "L",
+          drive_type                  => "L",
+          drive_serial_number         => "L",
+          volume_label_offset         => "L",
+          volume_label_unicode_offset => "L" . (length($buf) >= sizeof("L4"))*1,
         );
 
         # "If the value of this field is 0x00000014, it MUST be ignored,
@@ -219,18 +220,11 @@ sub read_link_info {
           $volume->{volume_label} = read_and_unpack_asciz($buf, "link_info/data/volume_id",
             $offset
           );
+          # Remove the unused field.
+          delete $volume->{volume_label_unicode_offset}
         }
         else {
-          # We don't read this with the other elements above because
-          # there is the slight chance that we don't have a Unicode label
-          # and the length of the plain label is less than 4 bytes,  In that
-          # case we could get a buffer overrun since the VolumeID struct is
-          # not necessarily aligned/padded.
-          # We need to skip the three fields we've already parsed until we 
-          # reach the new offset.
-          $offset = read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode_offset",
-            "x[L3]L"
-          );
+          $offset = delete $volume->{volume_label_unicode_offset};
           # The buffer doesn't contain the size field, so subtract it from
           # the offset.
           $offset -= sizeof("L");
