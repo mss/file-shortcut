@@ -86,7 +86,7 @@ sub readshortcut {
 
   require File::Shortcut::Reader;
   return try {
-    return File::Shortcut::Reader::readshortcut($file);
+    return File::Shortcut::Reader::read_shortcut($file);
   }
   catch {
     die $_ unless $_ ~~ \$Error;
@@ -111,7 +111,7 @@ sub shortcut {
   $options ||= {};
   require File::Shortcut::Writer;
   return try {
-    return File::Shortcut::Writer::writeshortcut($source, $target, $options);
+    return File::Shortcut::Writer::write_shortcut($source, $target, $options);
   }
   catch {
     die $_ unless $_ ~~ \$Error;

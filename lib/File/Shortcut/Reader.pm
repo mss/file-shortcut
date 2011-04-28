@@ -19,7 +19,7 @@ use File::Shortcut::Util qw(
 use File::Shortcut::Data;
 
 
-sub readshortcut {
+sub read_shortcut {
   my($fh) = @_;
   my $dbg = $File::Shortcut::Debug;
 
@@ -63,8 +63,41 @@ sub readshortcut {
   );
   dbg("header/flags/%s: %d", $header->{flags});
 
+  # Map the file attributes.
+  $header->{attrs} = unpack_bits($header->{attrs},
+    @File::Shortcut::Data::FILE_ATTRIBUTES
+  );
+
+  # Parse 64-bit FileTime.
+  for my $key (qw(ctime atime mtime)) {
+    $header->{$key} = parse_filetime($header->{$key});
+  }
+
+  # Map the requested window state [MS-SHLLINK] 2.1
+  $header->{show} = eval { given ($header->{show}) {
+    when (1) { return "normal" };
+    when (3) { return "maximized" };
+    when (7) { return "minimized" };
+    default  { return "normal" };
+  }};
+
   # This is what we return in the end.
-  my %struct;
+  my %struct = (
+    read_link_target($fh, $header),
+    read_link_info($fh, $header),
+    read_string_data($fh, $header),
+  );
+
+  # These aren't needed anymore.
+  delete $header->{flags};
+  $struct{header} = $header;
+
+  return \%struct;
+}
+
+sub read_link_target {
+  my($fh, $header) = @_;
+  my %result;
 
   # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
@@ -85,6 +118,13 @@ sub readshortcut {
       read_and_unpack($fh, "link_target/item/skip", skip => "x[$len]");
     }
   }
+
+  return %result;
+}
+
+sub read_link_info {
+  my($fh, $header) = @_;
+  my %result;
 
   # [MS-SHLLINK] 2.3
   if ($header->{flags}->{has_link_info}) {
@@ -205,6 +245,13 @@ sub readshortcut {
     }
   }
 
+  return %result;
+}
+
+sub read_string_data {
+  my($fh, $header) = @_;
+  my %result;
+
   # [MS-SHLLINK] 2.4
   foreach my $key (qw(
     name
@@ -222,30 +269,11 @@ sub readshortcut {
       my $str = read_and_unpack($fh, "$key/data", "a[$len]");
       $str = decode('utf-16le', $str) if $header->{flags}->{is_unicode};
 
-      $struct{$key} = $str;
+      $result{$key} = $str;
     }
   }
-  # TODO: delete $header->{flags};
 
-  $header->{attrs} = unpack_bits($header->{attrs},
-    @File::Shortcut::Data::FILE_ATTRIBUTES
-  );
-
-  # Parse 64-bit FileTime.
-  for my $key (qw(ctime atime mtime)) {
-    $header->{$key} = parse_filetime($header->{$key});
-  }
-
-  # [MS-SHLLINK] 2.1
-  $header->{show} = eval { given ($header->{show}) {
-    when (1) { return "normal" };
-    when (3) { return "maximized" };
-    when (7) { return "minimized" };
-    default  { return "normal" };
-  }};
-
-  $struct{header} = $header;
-  return \%struct;
+  return %result;
 }
 
 
