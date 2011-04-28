@@ -7,7 +7,7 @@ use strict;
 
 use parent qw(Exporter);
 our @EXPORT_OK = do {
-  # All subs except private ones are fine to be imported somehwere else.
+  # All subs except private ones are fine to be imported somewhere else.
   # Based on http://stackoverflow.com/questions/607282/-/607342#607342
   no strict 'refs';
   my $P = __PACKAGE__ . "::";
