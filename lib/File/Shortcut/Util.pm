@@ -43,10 +43,33 @@ sub dbg {
   my $fh = $File::Shortcut::Debug;
   return unless $fh;
   $fh = \*STDERR unless ref $fh;
-  printf $fh shift() . "\n", @_;
+
+  local $SIG{__WARN__} = \&carp;
+
+  my $format = shift();
+  if (@_ == 1) {
+    my $data = shift();
+    given (ref $data) {
+      when ("HASH") {
+        foreach my $key (sort keys %{$data}) {
+          printf $fh "$format\n", $key, $data->{$key};
+        }
+        return;
+      }
+      when ("ARRAY") {
+        foreach my $key (0 .. $#{$data}) {
+          printf $fh "$format\n", $key, $data->[$key];
+        }
+        return;
+      }
+      default {
+        printf $fh "$format\n", $data;
+        return;
+      }
+    }
+  }
+  printf $fh "$format\n", @_;
 }
-
-
 
 
 sub sizeof {

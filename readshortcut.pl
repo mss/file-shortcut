@@ -13,10 +13,15 @@ use Carp;
 $Carp::Verbose = 1;
 $SIG{__DIE__} = \&croak;
 
+use Data::Dumper;
+
+
 use File::Shortcut qw(readshortcut);
 $File::Shortcut::Debug = 1;
 
-use Data::Dumper;
+use File::Shortcut::Util qw(dbg);
+use File::Shortcut::Data;
+
 
 my $data = readshortcut(@ARGV);
 unless ($data) {

@@ -61,6 +61,7 @@ sub readshortcut {
   $header->{flags} = unpack_bits($header->{flags},
     @File::Shortcut::Data::HEADER_FLAGS
   );
+  dbg("header/flags/%s: %d", $header->{flags});
 
   # This is what we return in the end.
   my %struct;
@@ -102,6 +103,7 @@ sub readshortcut {
       my $flags = unpack_bits(read_and_unpack($fh, "link_info/head/flags", "L"),
         @File::Shortcut::Data::LINK_INFO_FLAGS
       );
+      dbg("link_info/head/flags/%s: %d", $flags);
 
       my $data = read_and_unpack($fh, "link_info/head/offsets",
         volume_id                    => "L",
