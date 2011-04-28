@@ -29,7 +29,7 @@ sub readshortcut {
     open my $fh, '<', $file or return err("open(%s): %s", $file, $!);
     $file = $fh;
   }
-  binmode($file) // return err("binmode(): %s", $!);
+  binmode($file) || return err("binmode(): %s", $!);
 
   # [MS-SHLLINK] 2.1
   my $header = read_and_unpack($file, "header",
