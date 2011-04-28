@@ -212,21 +212,35 @@ sub read_link_info {
         # to locate the volume label string."
         $offset = delete $volume->{volume_label_offset};
         if ($offset != 0x14) {
+          # The buffer doesn't contain the size field, so subtract it from
+          # the offset.
           $offset -= sizeof("L");
+          # This is a plain zero-terminated ASCII string.
           $volume->{volume_label} = read_and_unpack_asciz($buf, "link_info/data/volume_id",
             $offset
           );
         }
         else {
+          # We don't read this with the other elements above because
+          # there is the slight chance that we don't have a Unicode label
+          # and the length of the plain label is less than 4 bytes,  In that
+          # case we could get a buffer overrun since the VolumeID struct is
+          # not necessarily aligned/padded.
+          # We need to skip the three fields we've already parsed until we 
+          # reach the new offset.
           $offset = read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode_offset",
             "x[L3]L"
           );
+          # The buffer doesn't contain the size field, so subtract it from
+          # the offset.
           $offset -= sizeof("L");
+          # This is a zero-terminated UTF-16 string.
           $volume->{volume_label} = read_and_unpack_utf16z($buf, "link_info/data/volume_id/volume_label_unicode",
             $offset
           );
         }
 
+        # Map the drive types, defaulting to unknown.
         $volume->{drive_type} = unpack_index($volume->{drive_type}, 0,
           @File::Shortcut::Data::DRIVE_TYPE
         );
