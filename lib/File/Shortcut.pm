@@ -86,7 +86,7 @@ sub readshortcut {
 
   require File::Shortcut::Reader;
   return try {
-    return File::Shortcut::Reader::read_shortcut($file);
+    return File::Shortcut::Reader::read_shortcut($file)->{path};
   }
   catch {
     die $_ unless $_ ~~ \$Error;
