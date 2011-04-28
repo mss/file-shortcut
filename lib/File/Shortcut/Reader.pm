@@ -193,8 +193,9 @@ sub read_link_info {
       )) {
         next unless defined $data->{$key};
         my $offset = $data->{$key};
-        $data->{$key} = read_and_unpack($buf, "link_info/data/$key",
-          "x[$offset]Z*");
+        $data->{$key} = read_and_unpack_asciz($buf, "link_info/data/$key",
+          $offset
+        );
       }
 
       # [MS-SHLLINK] 2.3.1
@@ -212,11 +213,14 @@ sub read_link_info {
           volume_label_offset => "L",
         );
 
+        # "If the value of this field is 0x00000014, it MUST be ignored,
+        # and the value of the VolumeLabelOffsetUnicode field MUST be used 
+        # to locate the volume label string."
         $offset = delete $volume->{volume_label_offset};
         if ($offset != 0x14) {
           $offset -= sizeof("L");
-          $volume->{volume_label} = read_and_unpack($buf, "link_info/data/volume_id",
-            "x[$offset]Z*"
+          $volume->{volume_label} = read_and_unpack_asciz($buf, "link_info/data/volume_id",
+            $offset
           );
         }
         else {
@@ -224,10 +228,9 @@ sub read_link_info {
             "x[L4]L"
           );
           $offset -= sizeof("L");
-          my $len = index($buf, "\0\0", $offset) - $offset + 1;
-          $volume->{volume_label} = decode('utf-16le', read_and_unpack($buf, "link_info/data/volume_id/volume_label_unicode",
-            "x[$offset]a[$len]"
-          ));
+          $volume->{volume_label} = read_and_unpack_utf16z($buf, "link_info/data/volume_id/volume_label_unicode",
+            $offset
+          );
         }
 
         $volume->{drive_type} = unpack_index($volume->{drive_type}, 0,
@@ -258,12 +261,11 @@ sub read_string_data {
       my $len = read_and_unpack($fh, "$key/size", "S");
       next unless $len;
 
-      # [MS-SHLLINK] 2.1.1; http://msdn.microsoft.com/en-us/library/dd374081.aspx
-      $len *= 2 if $header->{flags}->{is_unicode};
-      my $str = read_and_unpack($fh, "$key/data", "a[$len]");
-      $str = decode('utf-16le', $str) if $header->{flags}->{is_unicode};
-
-      $result{$key} = $str;
+      # [MS-SHLLINK] 2.1.1
+      $result{$key} = read_and_unpack_str($fh, "$key/data",
+        0, $len,
+        $header->{flags}->{is_unicode}
+      );
     }
   }
 
@@ -314,5 +316,40 @@ sub read_and_unpack {
   delete $buf{_};
   return \%buf;
 }
+
+sub read_and_unpack_str {
+  my($fh, $where, $offset, $len, $utf16) = @_;
+  $offset //= 0;
+  $len    //= 0;
+  $utf16  //= 0;
+
+  # Microsoft likes to use UTF-16, see
+  # http://msdn.microsoft.com/en-us/library/dd374081.aspx
+  # We need to read twice the data if it is UTF-16.  Assume the length
+  # is already correct if a negative value is supplied.
+  $len *= 2 if $utf16 > 0;
+
+  my $str = read_and_unpack($fh, $where, "x[$offset]a[$len]");
+  $str = decode('utf-16le', $str) if $utf16;
+  return $str;
+}
+
+sub read_and_unpack_asciz {
+  my($buf, $where, $offset) = @_;
+  $offset //= 0;
+
+  return read_and_unpack($buf, $where, "x[$offset]Z*");
+}
+
+sub read_and_unpack_utf16z {
+  my($buf, $where, $offset) = @_;
+  $offset //= 0;
+
+  return read_and_unpack_str($buf, $where,
+    $offset, index($buf, "\0\0", $offset) - $offset + 1,
+    -1
+  );
+}
+
 
 1;
