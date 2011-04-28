@@ -177,7 +177,7 @@ sub read_link_info {
         $data->{$key} -= $hlen;
         dbg("link_info/$key: offset %d", $data->{$key});
         if ($data->{$key} < 0) {
-          return err("link_info/head: malformed offset for $key");
+          err("link_info/head: malformed offset for $key");
         }
       }
 
