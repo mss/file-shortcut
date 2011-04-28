@@ -6,16 +6,16 @@ use warnings;
 use strict;
 
 use parent qw(Exporter);
-our @EXPORT_OK = qw(
-  err
-  expect
-
-  dbg
-
-  sizeof
-  map_bits
-  parse_filetime
-);
+our @EXPORT_OK = do {
+  # All subs except private ones are fine to be imported somehwere else.
+  # Based on http://stackoverflow.com/questions/607282/-/607342#607342
+  no strict 'refs';
+  my $P = __PACKAGE__ . "::";
+  grep {
+    my $N = "$P$_";
+    defined &{$N} and $N !~ /^_/;
+  } keys %{$P}
+};
 
 use Carp;
 
