@@ -36,9 +36,9 @@ our $VERSION = '0.01';
 
     shortcut "C:\\WINDOWS\\notepad.exe", "notepad.exe.lnk", {
       description => "The worst editor on earth",
-    } or die $File::Shortcut::errstr;
+    } or die $File::Shortcut::Error;
 
-    my $path = readshortcut("notepad.exe.lnk") or die $File::Shortcut::errstr;
+    my $path = readshortcut("notepad.exe.lnk") or die $File::Shortcut::Error;
     my($vol, $dir, $file) = File::Spec::Win32->splitpath($path);
 
 
@@ -54,7 +54,7 @@ The following functions can be imported into your script:
 
 =cut
 
-our $errstr = "";
+our $Error = "";
 
 sub _err {
   my($errstr) = shift;
@@ -73,11 +73,11 @@ sub _expect {
   );
 }
 
-our $debug = 0;
+our $Debug = 0;
 
 sub _dbg {
-  return unless $debug;
-  my $fh = ref $debug ? $debug : \*STDERR;
+  return unless $Debug;
+  my $fh = ref $Debug ? $Debug : \*STDERR;
   printf $fh shift() . "\n", @_;
 }
 
@@ -105,23 +105,23 @@ sub _read_and_unpack {
     my $len = _sizeof($template);
     _dbg("%s: read (%d): %s", $where, $len, $template);
     if (read($fh, $buf, $len) != $len) {
-      return _err($errstr, "read(): %s: expected %d bytes (%s)",
+      return _err(\$Error, "read(): %s: expected %d bytes (%s)",
         $where,
         $len,
         $template,
       );
     }
-    _dbg(" -> %s", unpack("h" . $len * 2, $buf)) if $debug;
+    _dbg(" -> %s", unpack("h" . $len * 2, $buf)) if $Debug;
   }
   else {
     _dbg("%s: read (buf): %s", $where, $template);
     $buf = $fh;
-    _dbg(" -> %s", unpack("h*", $buf)) if $debug;
+    _dbg(" -> %s", unpack("h*", $buf)) if $Debug;
   }
   
   my %buf;
   @buf{@keys} = unpack($template, $buf);
-  _dbg(" -> { %s }", join ", " => map { sprintf("%s => %s", $_ , $buf{$_} // "undef") } @keys) if $debug;
+  _dbg(" -> { %s }", join ", " => map { sprintf("%s => %s", $_ , $buf{$_} // "undef") } @keys) if $Debug;
   
   if (@keys == 1) {
     return $buf{_} if $keys[0] eq "_";
@@ -186,7 +186,7 @@ handle.>  If EXPR is omitted, uses C<$_>.
 
 sub readshortcut {
   my $file = @_ ? $_[0] : $_;
-  return _readshortcut(\$errstr, $file);
+  return _readshortcut(\$Error, $file);
 }
 
 sub _readshortcut {

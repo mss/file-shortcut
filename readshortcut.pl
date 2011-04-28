@@ -17,11 +17,11 @@ use File::Shortcut qw(readshortcut);
 
 use Data::Dumper;
 
-$File::Shortcut::debug = 1;
+$File::Shortcut::Debug = 1;
 
 my $data = readshortcut(@ARGV);
 unless ($data) {
-  say $File::Shortcut::errstr;
+  say $File::Shortcut::Error;
   exit 1;
 }
 print Dumper($data);
