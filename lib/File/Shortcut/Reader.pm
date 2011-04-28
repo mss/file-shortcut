@@ -40,6 +40,8 @@ sub readshortcut {
     _        => "L",   #  1 dword Reserved
   );
 
+  # The magic string is officially the size of the header.  They had to insert
+  # three reserved (aka must be zero) fields to play this pun.  Go figure...
   expect("header/magic", "%08x",
     $header->{magic},
     ord("L")
