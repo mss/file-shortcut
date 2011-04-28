@@ -201,7 +201,7 @@ sub read_link_info {
         my $offset = $data->{volume_id};
         my $buf = read_and_unpack($buf, "link_info/data/volume_id",
           "x[$offset]L/a");
-        my $volume = read_and_unpack($buf, "link_info/data/volume_id/head",
+        my $data = read_and_unpack($buf, "link_info/data/volume_id/head",
           drive_type                  => "L",
           drive_serial_number         => "L",
           volume_label_offset         => "L",
@@ -211,24 +211,24 @@ sub read_link_info {
         # "If the value of this field is 0x00000014, it MUST be ignored,
         # and the value of the VolumeLabelOffsetUnicode field MUST be used 
         # to locate the volume label string."
-        $offset = delete $volume->{volume_label_offset};
+        $offset = delete $data->{volume_label_offset};
         my $utf16 = $offset == 0x14;
-        $offset = $volume->{volume_label_unicode_offset} if $utf16;
-        delete $volume->{volume_label_unicode_offset};
+        $offset = $data->{volume_label_unicode_offset} if $utf16;
+        delete $data->{volume_label_unicode_offset};
         # The buffer doesn't contain the size field, so subtract it from
         # the offset.
         $offset -= sizeof("L");
         # Read the zero-terminated string, either ASCII or UTF-16.
-        $volume->{volume_label} = read_and_unpack_strz($buf, "link_info/data/volume_id/volume_label",
+        $data->{volume_label} = read_and_unpack_strz($buf, "link_info/data/volume_id/volume_label",
           $offset, $utf16
         );
 
         # Map the drive types, defaulting to unknown.
-        $volume->{drive_type} = unpack_index($volume->{drive_type}, 0,
+        $data->{drive_type} = unpack_index($data->{drive_type}, 0,
           @File::Shortcut::Data::DRIVE_TYPE
         );
 
-        $result{volume_id} = $volume;
+        $result{volume_id} = $data;
       }
 
       # [MS-SHLLINK] 2.3.2
