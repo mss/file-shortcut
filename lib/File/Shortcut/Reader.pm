@@ -278,6 +278,8 @@ sub read_link_info {
             $offset, $utf16
           );
         }
+
+        $result{common_network_relative_link} = $data;
       }
     }
   }
