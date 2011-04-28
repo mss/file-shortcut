@@ -78,26 +78,24 @@ sub read_shortcut {
     @File::Shortcut::Data::SHOW_COMMAND
   );
 
-  # This is what we return in the end.
-  my %struct = (
-    read_link_target($fh, $header),
-    read_link_info($fh, $header),
-    read_string_data($fh, $header),
-  );
+  # We don't want to return these.
+  my $flags = delete $header->{flags};
 
-  # These aren't needed anymore.
-  delete $header->{flags};
-  $struct{header} = $header;
-
-  return \%struct;
+  # Parse and return the rest of the file.
+  return {
+    header => $header,
+    read_link_target($fh, $flags),
+    read_link_info($fh, $flags),
+    read_string_data($fh, $flags),
+  };
 }
 
 sub read_link_target {
-  my($fh, $header) = @_;
+  my($fh, $flags) = @_;
   my %result;
 
   # [MS-SHLLINK] 2.2
-  if ($header->{flags}->{has_link_target}) {
+  if ($flags->{has_link_target}) {
     my $len = read_and_unpack($fh, "link_target/size", "S");
 
     # [MS-SHLLINK] 2.2.2
@@ -120,16 +118,16 @@ sub read_link_target {
 }
 
 sub read_link_info {
-  my($fh, $header) = @_;
+  my($fh, $flags) = @_;
   my %result;
 
   # [MS-SHLLINK] 2.3
-  if ($header->{flags}->{has_link_info}) {
+  if ($flags->{has_link_info}) {
     my $len = read_and_unpack($fh, "link_info/size", "L");
     $len -= sizeof("L");
 
     # [MS-SHLLINK] 2.1.1
-    if ($header->{flags}->{force_no_link_info}) {
+    if ($flags->{force_no_link_info}) {
       read_and_unpack($fh, "link_info/skip", skip => "x[$len]");
     }
     else {
@@ -246,7 +244,7 @@ sub read_link_info {
 }
 
 sub read_string_data {
-  my($fh, $header) = @_;
+  my($fh, $flags) = @_;
   my %result;
 
   # [MS-SHLLINK] 2.4
@@ -257,14 +255,14 @@ sub read_string_data {
     arguments
     icon_location
   )) {
-    if ($header->{flags}->{"has_$key"}) {
+    if ($flags->{"has_$key"}) {
       my $len = read_and_unpack($fh, "$key/size", "S");
       next unless $len;
 
       # [MS-SHLLINK] 2.1.1
       $result{$key} = read_and_unpack_str($fh, "$key/data",
         0, $len,
-        $header->{flags}->{is_unicode}
+        $flags->{is_unicode}
       );
     }
   }
