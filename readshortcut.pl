@@ -20,7 +20,7 @@ use Data::Dumper;
 
 my $data = readshortcut(@ARGV);
 unless ($data) {
-  say $File::Shortcut::Error;
+  printf STDERR "error: %s\n", $File::Shortcut::Error;
   exit 1;
 }
 print Dumper($data);

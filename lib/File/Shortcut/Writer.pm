@@ -13,6 +13,12 @@ use File::Shortcut::Util qw(
 );
 
 
-#TODO
+sub writeshortcut {
+  my($source, $target, $options) = @_;
+  my $dbg = $File::Shortcut::Debug;
+
+  #TODO
+  die "writeshortcut() not implemented";
+}
 
 1;

@@ -11,6 +11,8 @@ our @EXPORT_OK = qw(
   readshortcut
 );
 
+use Try::Tiny;
+
 
 =head1 NAME
 
@@ -69,7 +71,13 @@ handle.>  If EXPR is omitted, uses C<$_>.
 sub readshortcut {
   my $file = @_ ? $_[0] : $_;
   require File::Shortcut::Reader;
-  return File::Shortcut::Reader::readshortcut($file);
+  return try {
+    return File::Shortcut::Reader::readshortcut($file);
+  }
+  catch {
+    die $_ unless $_ ~~ \$Error;
+    return undef;
+  }
 }
 
 =head2 shortcut OLDFILE, NEWFILE, METADATA
@@ -88,8 +96,13 @@ sub shortcut {
   my($source, $target, $options) = @_;
   $options ||= {};
   require File::Shortcut::Writer;
-  die "Not implemented";
-  #return File::Shortcut::Writer::writeshortcut($source, $target, $options);
+  return try {
+    return File::Shortcut::Writer::writeshortcut($source, $target, $options);
+  }
+  catch {
+    die $_ unless $_ ~~ \$Error;
+    return undef;
+  }
 }
 
 =head1 AUTHOR

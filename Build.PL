@@ -8,6 +8,7 @@ my $builder = Module::Build->new(
     dist_author         => q{Malte S. Stretz <mss@apache.org>},
     dist_version_from   => 'lib/File/Shortcut.pm',
     build_requires => {
+        'Try::Tiny' => 0,
         'Test::More' => 0,
     },
     add_to_cleanup      => [ 'File-Shortcut-*' ],

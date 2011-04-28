@@ -29,7 +29,7 @@ sub readshortcut {
     open my $fh, '<', $file or return err("open(%s): %s", $file, $!);
     $file = $fh;
   }
-  binmode($file) || return err("binmode(): %s", $!);
+  binmode($file) || err("binmode(): %s", $!);
 
   # [MS-SHLLINK] 2.1
   my $header = read_and_unpack($file, "header",
@@ -47,12 +47,12 @@ sub readshortcut {
     _        => "S",   #  1  word Reserved
     _        => "L",   #  1 dword Reserved
     _        => "L",   #  1 dword Reserved
-  ) // return;
+  );
 
   expect("header/magic", "%08x",
     $header->{magic},
     ord("L")
-  ) // return;
+  );
   # Yes, these are the same:
   #   "01140200-0000-0000-c000-000000000046"
   #   {00021401-0000-0000-C000-000000000046} (cf. [MS-SHLLINK] 2.1)
@@ -62,7 +62,7 @@ sub readshortcut {
   expect("header/clsid", "%s",
     $header->{clsid},
     join("", qw(01140200 0000 0000 c000 000000000046))
-  ) // return;
+  );
 
   my %struct = (
     header => $header,
@@ -100,11 +100,11 @@ sub readshortcut {
 
   # [MS-SHLLINK] 2.2
   if ($header->{flags}->{has_link_target}) {
-    my $len = read_and_unpack($file, "link_target/size", "S") // return;
+    my $len = read_and_unpack($file, "link_target/size", "S");
 
     # [MS-SHLLINK] 2.2.2
     while (1) {
-      $len = read_and_unpack($file, "link_target/item/size", "S") // return;
+      $len = read_and_unpack($file, "link_target/item/size", "S");
 
       # [MS-SHLLINK] 2.2.1
       last unless $len;
@@ -114,25 +114,25 @@ sub readshortcut {
 
       # Skip item, we don't know how to parse it.
       # TODO: Find out...
-      read_and_unpack($file, "link_target/item/skip", skip => "x[$len]") // return;
+      read_and_unpack($file, "link_target/item/skip", skip => "x[$len]");
     }
   }
 
   # [MS-SHLLINK] 2.3
   if ($header->{flags}->{has_link_info}) {
-    my $len = read_and_unpack($file, "link_info/size", "L") // return;
+    my $len = read_and_unpack($file, "link_info/size", "L");
     $len -= sizeof("L");
 
     # [MS-SHLLINK] 2.1.1
     if ($header->{flags}->{force_no_link_info}) {
-      read_and_unpack($file, "link_info/skip", skip => "x[$len]") // return;
+      read_and_unpack($file, "link_info/skip", skip => "x[$len]");
     }
     else {
       # [MS-SHLLINK] 2.3
-      my $hlen = read_and_unpack($file, "link_info/head/size", "L") // return;
+      my $hlen = read_and_unpack($file, "link_info/head/size", "L");
       $len -= $hlen - sizeof("L");
 
-      my $flags = read_and_unpack($file, "link_info/head/flags", "L") // return;
+      my $flags = read_and_unpack($file, "link_info/head/flags", "L");
       $flags = map_bits($flags, qw(
         volume_id_and_local_base_path
         common_network_relative_link_and_path_suffix
@@ -151,7 +151,7 @@ sub readshortcut {
           $xlen += sizeof("L2") if $xlen < 0;
           return $xlen;
         }
-      ) // return;
+      );
 
       unless ($flags->{volume_id_and_local_base_path}) {
         delete @{$data}{qw(
@@ -179,7 +179,7 @@ sub readshortcut {
         }
       }
 
-      my $buf = read_and_unpack($file, "link_info/data", "a[$len]") // return;
+      my $buf = read_and_unpack($file, "link_info/data", "a[$len]");
 
       # [MS-SHLLINK] 2.3.1
       if (defined $data->{volume_id}) {
@@ -247,12 +247,12 @@ sub readshortcut {
     icon_location
   )) {
     if ($header->{flags}->{"has_$key"}) {
-      my $len = read_and_unpack($file, "$key/size", "S") // return;
+      my $len = read_and_unpack($file, "$key/size", "S");
       next unless $len;
 
       # [MS-SHLLINK] 2.1.1; http://msdn.microsoft.com/en-us/library/dd374081.aspx
       $len *= 2 if $header->{flags}->{is_unicode};
-      my $str = read_and_unpack($file, "$key/data", "a[$len]") // return;
+      my $str = read_and_unpack($file, "$key/data", "a[$len]");
       $str = decode('utf-16le', $str) if $header->{flags}->{is_unicode};
 
       $struct{$key} = $str;

@@ -23,15 +23,15 @@ use File::Shortcut;
 
 
 sub err {
-  local $SIG{__WARN__} = \&confess;
+  local $SIG{__WARN__} = $File::Shortcut::Debug ? \&croak : \&carp;
   $File::Shortcut::Error = sprintf(shift, @_);
-  return undef;
+  croak \$File::Shortcut::Error;
 }
 
 sub expect {
   my($where, $format, $value, $expect) = @_;
   return 1 if ($value ~~ $expect);
-  return _err("%s: expected $format, got $format",
+  err("%s: expected $format, got $format",
     $where,
     $expect,
     $value,
