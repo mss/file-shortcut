@@ -14,10 +14,9 @@ $Carp::Verbose = 1;
 $SIG{__DIE__} = \&croak;
 
 use File::Shortcut qw(readshortcut);
+$File::Shortcut::Debug = 1;
 
 use Data::Dumper;
-
-$File::Shortcut::Debug = 1;
 
 my $data = readshortcut(@ARGV);
 unless ($data) {
