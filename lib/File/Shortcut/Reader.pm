@@ -183,7 +183,19 @@ sub read_link_info {
         }
       }
 
+      # Slurp the whole struct so we can jump around freely.
       my $buf = read_and_unpack($fh, "link_info/data", "a[$len]");
+
+      # These are easy as they are just zero-terminated strings.
+      foreach my $key (qw(
+        common_path_suffix
+        local_base_path
+      )) {
+        next unless defined $data->{$key};
+        my $offset = $data->{$key};
+        $data->{$key} = read_and_unpack($buf, "link_info/data/$key",
+          "x[$offset]Z*");
+      }
 
       # [MS-SHLLINK] 2.3.1
       if (defined $data->{volume_id}) {
@@ -223,15 +235,7 @@ sub read_link_info {
         );
       }
 
-      foreach my $key (qw(
-        common_path_suffix
-        local_base_path
-      )) {
-        next unless defined $data->{$key};
-        my $offset = $data->{$key};
-        $data->{$key} = read_and_unpack($buf, "link_info/data/$key",
-          "x[$offset]Z*");
-      }
+      
     }
   }
 
