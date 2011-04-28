@@ -262,6 +262,10 @@ sub read_link_info {
           $data->{net_provider_type} = undef;
         }
 
+        # "FooNameUnicode (variable): An optional, NULL–terminated, Unicode 
+        # string that is the Unicode version of the FooName string. This 
+        # field MUST be present if the value of the FooNameOffset field is 
+        # greater than 0x00000014; otherwise, this field MUST NOT be present."
         foreach my $key (qw(net_name device_name)) {
           my $offset = delete $data->{"${key}_offset"};
           next unless defined $offset;
