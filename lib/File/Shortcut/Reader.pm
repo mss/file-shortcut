@@ -212,27 +212,16 @@ sub read_link_info {
         # and the value of the VolumeLabelOffsetUnicode field MUST be used 
         # to locate the volume label string."
         $offset = delete $volume->{volume_label_offset};
-        if ($offset != 0x14) {
-          # The buffer doesn't contain the size field, so subtract it from
-          # the offset.
-          $offset -= sizeof("L");
-          # This is a plain zero-terminated ASCII string.
-          $volume->{volume_label} = read_and_unpack_asciz($buf, "link_info/data/volume_id",
-            $offset
-          );
-          # Remove the unused field.
-          delete $volume->{volume_label_unicode_offset}
-        }
-        else {
-          $offset = delete $volume->{volume_label_unicode_offset};
-          # The buffer doesn't contain the size field, so subtract it from
-          # the offset.
-          $offset -= sizeof("L");
-          # This is a zero-terminated UTF-16 string.
-          $volume->{volume_label} = read_and_unpack_utf16z($buf, "link_info/data/volume_id/volume_label_unicode",
-            $offset
-          );
-        }
+        my $utf16 = $offset == 0x14;
+        $offset = $volume->{volume_label_unicode_offset} if $utf16;
+        delete $volume->{volume_label_unicode_offset};
+        # The buffer doesn't contain the size field, so subtract it from
+        # the offset.
+        $offset -= sizeof("L");
+        # Read the zero-terminated string, either ASCII or UTF-16.
+        $volume->{volume_label} = read_and_unpack_strz($buf, "link_info/data/volume_id/volume_label",
+          $offset, $utf16
+        );
 
         # Map the drive types, defaulting to unknown.
         $volume->{drive_type} = unpack_index($volume->{drive_type}, 0,
