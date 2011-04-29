@@ -98,20 +98,20 @@ sub read_link_target {
   # [MS-SHLLINK] 2.2
   if ($flags->{has_link_target}) {
     my $len = read_and_unpack($fh, "link_target/size", "S");
+    my $buf = read_and_unpack($fh, "link_target/data", "a[$len]");
+
+    # Skip the buffer loading unless we can see the contents, cf. TODO below.
+    return %result unless $File::Shortcut::Debug;
 
     # [MS-SHLLINK] 2.2.2
-    while (1) {
-      $len = read_and_unpack($fh, "link_target/item/size", "S");
+    while ($buf) {
+      # Skip item, we don't know how to parse it.
+      # TODO: Find out (and drop the return clause above)...
+      my $item = read_and_unpack($buf, "link_target/item", "S/a");
+      substr($buf, 0, length($item)) = "";
 
       # [MS-SHLLINK] 2.2.1
-      last unless $len;
-
-      # [MS-SHLLINK] 2.2.2
-      $len -= sizeof("S");
-
-      # Skip item, we don't know how to parse it.
-      # TODO: Find out...
-      read_and_unpack($fh, "link_target/item/skip", skip => "x[$len]");
+      last if length($item) == 0;
     }
   }
 
