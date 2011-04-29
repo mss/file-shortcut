@@ -3,7 +3,14 @@ Changes
 MANIFEST
 README
 lib/File/Shortcut.pm
+lib/File/Shortcut/Data.pm
+lib/File/Shortcut/Reader.pm
+lib/File/Shortcut/Util.pm
+lib/File/Shortcut/Writer.pm
 t/00-load.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
+Makefile.PL
+META.yml
+LICENSE

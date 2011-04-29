@@ -20,7 +20,7 @@ use File::Shortcut::Util qw(err);
 
 =head1 NAME
 
-File::Shortcut - Read and write Windows shortcut files (C<*.lnk>).
+File::Shortcut - Read and write Windows Shortcut Files aka Shell Links (*.lnk).
 
 =head1 VERSION
 
@@ -123,6 +123,7 @@ sub shortcut {
 
 Malte S. Stretz, C<< <mss at apache.org> >>
 
+
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-file-shortcut at rt.cpan.org>,
@@ -188,7 +189,8 @@ L<http://www.stdlib.com/art6-Shortcut-File-Format-lnk.html>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011 Malte S. Stretz.
+Copyright 2011 Malte S. Stretz L<http://msquadrat.de>.
+Copyright 2011 Bernt Lorentz GmbH & Co. KG L<http://www.lorentz.de>.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
@@ -197,6 +199,10 @@ by the Free Software Foundation; or the Artistic License.
 See http://dev.perl.org/licenses/ for more information.
 
 
-=cut
+=head1 SEE ALSO
 
+L<Win32::Shortcut>
+
+
+=cut
 1; # End of File::Shortcut

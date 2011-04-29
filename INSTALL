@@ -1,0 +1,32 @@
+File::Shortcut is a Pure Perl Module to parse and manipulate Windows
+Shortcut Files aka Shell Links (*.lnk).  It can be used to create
+these files on systems which do not support the IShellLink interface
+(ie. anything but Windows).
+
+On Windows you might want to use Win32::Shortcut.
+
+
+REQUIREMENTS
+
+This module requires Perl 5.10 or later and the following additional
+modules (from CPAN):
+
+    * Try::Tiny
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    ./Build install
+
+
+SUPPORT AND DOCUMENTATION
+
+After installing, you can find documentation for this module with the
+perldoc command.
+
+    perldoc File::Shortcut
