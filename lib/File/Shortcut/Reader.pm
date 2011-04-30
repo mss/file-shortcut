@@ -26,7 +26,7 @@ sub read_shortcut {
   # [MS-SHLLINK] 2.1
   my $header = read_and_unpack($fh, "header",
     magic    => "L",   #  4 bytes Always 4C 00 00 00 ("L")
-    clsid    => "H32", # 16 bytes GUID for shortcut files
+    clsid    => "a16", # 16 bytes GUID for shortcut files
     flags    => "L",   #  1 dword Shortcut flags
     attrs    => "L",   #  1 dword Target file flags
     ctime    => "a[Q]",#  1 qword Creation time

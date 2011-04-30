@@ -136,12 +136,7 @@ sub parse_clsid {
   # Somebody please shoot the guy who invented the CLSID/GUID format
   # with its mixture of native and binary representation.
   # http://msdn.microsoft.com/en-us/library/aa373931.aspx
-  my @parts = unpack("A[8]A[4]A[4]A[4]A[12]", $value);
-  $parts[0] = unpack("V", pack("H8", $parts[0]));
-  $parts[1] = unpack("v", pack("H4", $parts[1]));
-  $parts[2] = unpack("v", pack("H4", $parts[2]));
-
-  return uc(sprintf("{%08x-%04x-%04x-%s-%s}", @parts));
+  return uc(sprintf("{%08x-%04x-%04x-%s-%s}", unpack("VvvH4H12", $value)));
 }
 
 
