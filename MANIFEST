@@ -3,6 +3,7 @@ Changes
 MANIFEST
 README
 lib/File/Shortcut.pm
+lib/File/Shortcut/App.pm
 lib/File/Shortcut/Data.pm
 lib/File/Shortcut/Reader.pm
 lib/File/Shortcut/Util.pm

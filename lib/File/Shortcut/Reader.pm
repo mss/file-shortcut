@@ -360,7 +360,9 @@ sub read_and_unpack {
   if (ref $fh) {
     my $len = sizeof($template);
     dbg("%s: read (%d): %s", $where, $len, $template);
-    if (read($fh, $buf, $len) != $len) {
+    my $ret = read($fh, $buf, $len);
+    err("read(): %s", $!) unless defined $ret;
+    if ($ret != $len) {
       return err("read(): %s: expected %d bytes (%s)",
         $where,
         $len,

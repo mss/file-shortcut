@@ -79,13 +79,11 @@ OS.  B<An UNC path is a valid return value, too.>
 sub readshortcut {
   my $file = @_ ? $_[0] : $_;
 
-  if (ref $file) {
-    croak "EXPR must be a file handle (or path)" if tell $file == -1;
-  }
-  else {
-    open my $fh, '<', $file or err("open(%s): %s", $file, $!);
+  unless (ref $file) {
+    open(my $fh, '<', $file) or err("open(%s): %s", $file, $!);
     $file = $fh;
   }
+  croak "path or file handle expected" if tell $file == -1;
   binmode($file) or err("binmode(): %s", $!);
 
   require File::Shortcut::Reader;
