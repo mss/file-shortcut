@@ -130,7 +130,7 @@ sub pack_bits {
 }
 
 
-sub parse_clsid {
+sub unpack_clsid {
   my $value = shift;
 
   # Somebody please shoot the guy who invented the CLSID/GUID format
@@ -140,7 +140,7 @@ sub parse_clsid {
 }
 
 
-sub parse_filetime {
+sub unpack_filetime {
   # Windows epoch: 1601-01-01.  Precision: 100ns
   # http://msdn.microsoft.com/en-us/library/ms724284.aspx
   # Loosely based on

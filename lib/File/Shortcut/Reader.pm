@@ -13,8 +13,10 @@ use File::Shortcut;
 use File::Shortcut::Util qw(
   err expect dbg
   sizeof
-  unpack_bits unpack_index
-  parse_clsid parse_filetime
+  unpack_bits
+  unpack_index
+  unpack_clsid
+  unpack_filetime
 );
 use File::Shortcut::Data;
 
@@ -50,7 +52,7 @@ sub read_shortcut {
   # The GUID/ClassId could theoretically change in the future (I doubt it
   # will ever).
   expect("header/clsid", "%s",
-    parse_clsid(delete $header->{clsid}),
+    unpack_clsid(delete $header->{clsid}),
     $File::Shortcut::Data::SHORTCUT_CLSID
   );
 
@@ -66,7 +68,7 @@ sub read_shortcut {
 
   # Parse 64-bit FileTime.
   for my $key (qw(ctime atime mtime)) {
-    $header->{$key} = parse_filetime($header->{$key});
+    $header->{$key} = unpack_filetime($header->{$key});
   }
 
   # Map the requested window state [MS-SHLLINK] 2.1
