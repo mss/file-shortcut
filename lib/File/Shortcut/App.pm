@@ -29,16 +29,17 @@ sub _run {
     @_
   );
   my %opts;
-  GetOptions(\%opts, @opts);
+  GetOptions(\%opts, @opts) or die;
 
   $sub->(sub {
-    $fun->(@_) // die "$File::Shortcut::Error\n";
+    no strict 'refs';
+    &{"File::Shortcut::$fun"}(@_) // die "$File::Shortcut::Error\n";
   }, %opts);
 }
 
 
 sub mkshortcut {
-  return _run(\&File::Shortcut::shortcut, sub {
+  return _run(shortcut => sub {
     my $call = shift;
     my %opts = @_;
 
@@ -46,11 +47,14 @@ sub mkshortcut {
     die unless $ARGV[1];
 
     return $call->(@ARGV);
-  });
+  }, qw(
+    description=s
+    icon=s
+  ));
 }
 
 sub readshortcut {
-  return _run(\&File::Shortcut::readshortcut, sub {
+  return _run(readshortcut => sub {
     my $call = shift;
     my %opts = @_;
 
@@ -60,7 +64,9 @@ sub readshortcut {
     return unless defined $result;
     say $result;
     return 1;
-  });
+  }, qw(
+    details!
+  ));
 }
 
 1;
