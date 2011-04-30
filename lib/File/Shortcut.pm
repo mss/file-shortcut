@@ -174,6 +174,10 @@ This module is heavily based on the information found at the following links:
 
 L<http://msdn.microsoft.com/en-us/library/dd871305.aspx>
 
+=item * [CYANLAB2010] CYANLAB: "LNK Parsing: You’re doing it wrong"
+
+L<http://blog.0x01000000.org/2010/08/13/lnk-parsing-youre-doing-it-wrong-ii/>
+
 =item * [HAGER1998] Jesse Hager: "The Windows Shortcut File Format"
 
 L<http://8bits.googlecode.com/files/The_Windows_Shortcut_File_Format.pdf>
