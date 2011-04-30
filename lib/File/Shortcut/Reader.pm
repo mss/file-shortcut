@@ -51,7 +51,7 @@ sub read_shortcut {
   # will ever).
   expect("header/clsid", "%s",
     parse_clsid(delete $header->{clsid}),
-    "{00021401-0000-0000-C000-000000000046}"
+    $File::Shortcut::Data::SHORTCUT_CLSID
   );
 
   $header->{flags} = unpack_bits($header->{flags},

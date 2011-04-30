@@ -6,6 +6,10 @@ use warnings;
 use strict;
 
 
+# Defined in [MS-SHLLINK] 2.1
+our $SHORTCUT_CLSID = "{00021401-0000-0000-C000-000000000046}";
+
+
 # Defined in [MS-SHLLINK] 2.1.1
 our @HEADER_FLAGS = qw(
   has_link_target
