@@ -107,6 +107,7 @@ sub read_link_target {
     while ($buf) {
       # Skip item, we don't know how to parse it.
       # TODO: Find out (and drop the return clause above)...
+      # http://msdn.microsoft.com/en-us/library/bb773321.aspx
       my $item = read_and_unpack($buf, "link_target/item", "S/a");
       substr($buf, 0, length($item)) = "";
 
