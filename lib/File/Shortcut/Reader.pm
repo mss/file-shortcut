@@ -14,7 +14,7 @@ use File::Shortcut::Util qw(
   err expect dbg
   sizeof
   unpack_bits unpack_index
-  parse_filetime
+  parse_clsid parse_filetime
 );
 use File::Shortcut::Data;
 
@@ -47,15 +47,11 @@ sub read_shortcut {
     delete $header->{magic},
     ord("L")
   );
-  # Yes, these are the same:
-  #   "01140200-0000-0000-c000-000000000046"
-  #   {00021401-0000-0000-C000-000000000046} (cf. [MS-SHLLINK] 2.1)
-  # Somebody please shoot the guy who invented the CLSID/GUID format
-  # with its mixture of native and binary representation.
-  # http://msdn.microsoft.com/en-us/library/aa373931.aspx
+  # The GUID/ClassId could theoretically change in the future (I doubt it
+  # will ever).
   expect("header/clsid", "%s",
-    delete $header->{clsid},
-    join("", qw(01140200 0000 0000 c000 000000000046))
+    parse_clsid(delete $header->{clsid}),
+    "{00021401-0000-0000-C000-000000000046}"
   );
 
   $header->{flags} = unpack_bits($header->{flags},
