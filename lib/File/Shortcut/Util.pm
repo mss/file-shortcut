@@ -13,7 +13,7 @@ our @EXPORT_OK = do {
   my $P = __PACKAGE__ . "::";
   grep {
     my $N = "$P$_";
-    defined &{$N} and $N !~ /^_/;
+    defined \&{$N} and $N !~ /^_/;
   } keys %{$P}
 };
 
